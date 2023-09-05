@@ -1,0 +1,26 @@
+# ninja log v5
+2	414	7146950278830712	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+415	496	7146950279628225	Intel_4004_Emulator.exe	7e744cbad7da22a4
+6	338	7142768385226659	CMakeFiles/Intel_4004_Emulator.dir/txtToBin.cpp.obj	f076a62438842b7a
+2	197	7147453355491042	build.ninja	bb4052ab07364fe5
+1	209	7147453355491042	build.ninja	bb4052ab07364fe5
+2	503	7147453360663209	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+503	652	7147453362128278	Intel_4004_Emulator.exe	7e744cbad7da22a4
+2	403	7147455423300043	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+404	475	7147455423990271	Intel_4004_Emulator.exe	7e744cbad7da22a4
+2	409	7147456829280504	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+410	480	7147456829971689	Intel_4004_Emulator.exe	7e744cbad7da22a4
+2	575	7156459338230314	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+575	727	7156459339731329	Intel_4004_Emulator.exe	7e744cbad7da22a4
+2	383	7156460500696508	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+383	446	7156460501318018	Intel_4004_Emulator.exe	7e744cbad7da22a4
+2	386	7156460582985448	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+387	450	7156460583595742	Intel_4004_Emulator.exe	7e744cbad7da22a4
+3	349	7156461726102266	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+350	414	7156461726724307	Intel_4004_Emulator.exe	7e744cbad7da22a4
+2	367	7156461833112084	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+367	430	7156461833727250	Intel_4004_Emulator.exe	7e744cbad7da22a4
+2	347	7156465464107573	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+347	410	7156465464724862	Intel_4004_Emulator.exe	7e744cbad7da22a4
+2	345	7156466550688292	CMakeFiles/Intel_4004_Emulator.dir/main.cpp.obj	64829f9ec04ff53e
+346	408	7156466551297990	Intel_4004_Emulator.exe	7e744cbad7da22a4
