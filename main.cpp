@@ -220,7 +220,7 @@ public:
                         PC = (OPA << 8) + programRom->fetch(PC + 1);
                         cycles -= 2;
                     case 0x6:
-                        reg = ((REGISTERS >> (15 - OPA * 4)) << 4) >> 4;
+                        reg = (REGISTERS >> (15 - OPA * 4)) & 0xFF;
                         if (reg == 15) {
                             REGISTERS &= ~((chunk64)(0xF << (15 - OPA * 4)));
                         } else {

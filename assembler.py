@@ -67,6 +67,8 @@ def handle_lines(line: str) -> bool:
     else:
         tokens = tokens.strip().split(" ")
     tokens = trim(tokens)
+    if len(tokens) == 0:
+        return True
     instruction = tokens[0].strip()
     tokens = list(map(str.strip, tokens[1:]))
     match instruction:
@@ -183,7 +185,9 @@ def add_label(line: str) -> bool:
     if len(line) < 2:
         sp = line[0].split(" ")
         sp = trim(sp)
-        if sp[0] in two_word_instructions:
+        if len(sp) == 0:
+            label_address_counter -= 1
+        elif sp[0] in two_word_instructions:
             label_address_counter += 1
         return True
     elif len(line) > 2:
