@@ -78,21 +78,21 @@ def handle_lines(line: str) -> bool:
             data.append(0x10 + conv_int(tokens[0], 0xF))
             data.append(labels[tokens[1]])
         case "FIM":
-            data.append(0x20 + conv_int(tokens[0], 0x8) << 1)
+            data.append(0x20 + (conv_int(tokens[0], 0x8) << 1))
             data.append(conv_int(tokens[1]))
         case "SRC":
-            data.append(0x21 + conv_int(tokens[0], 0x8) << 1)
+            data.append(0x21 + (conv_int(tokens[0], 0x8) << 1))
         case "FIN":
-            data.append(0x30 + conv_int(tokens[0], 0x8) << 1)
+            data.append(0x30 + (conv_int(tokens[0], 0x8) << 1))
         case "JIN":
-            data.append(0x31 + conv_int(tokens[0], 0x8) << 1)
+            data.append(0x31 + (conv_int(tokens[0], 0x8) << 1))
         case "JUN":
             address = labels[tokens[0]]
             data.append(0x40 + (address >> 8))
             data.append(address & 0xFF)
         case "JMS":
             address = labels[tokens[0]]
-            data.append(0x50 + address >> 8)
+            data.append(0x50 + (address >> 8))
             data.append(address & 0xFF)
         case "INC":
             data.append(0x60 + conv_int(tokens[0], 0xF))
@@ -179,7 +179,7 @@ def handle_lines(line: str) -> bool:
 
 def add_label(line: str) -> bool:
     global label_address_counter
-    line = line.replace("\t", " ")
+    line = line.split(';')[0].replace("\t", " ")
     label_address_counter += 1
     line = line.strip().split(",")
     if len(line) < 2:
@@ -198,6 +198,10 @@ def add_label(line: str) -> bool:
     if line[0].isnumeric():
         return False
     labels[line[0]] = label_address_counter-1
+    rest = line[1].split(" ")
+    rest = trim(rest)
+    if rest[0] in two_word_instructions:
+        label_address_counter += 1
     return True
 
 
@@ -227,16 +231,16 @@ def trim(tokens: list[str]) -> list[str]:
 
 
 def main():
-    with open("test.txt", "r") as f:
+    with open("test2.txt", "r") as f:
         lines = f.readlines()
-        for line in lines:
-            if not add_label(line):
-                print("Error: Invalid line")
-                break
-        for line in lines:
-            if not handle_lines(line):
-                print("Error: Invalid line")
-                break
+    for line in lines:
+        if not add_label(line):
+            print("Error: Invalid line")
+            break
+    for line in lines:
+        if not handle_lines(line):
+            print("Error: Invalid line")
+            break
     print(data)
     with open("test.bin", "wb") as f:
         f.write(bytearray(data))
