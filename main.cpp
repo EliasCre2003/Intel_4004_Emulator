@@ -46,6 +46,8 @@ public:
 
 class CPU {
 
+
+    word registerPairs[8];
     chunk64 REGISTERS = 0;  // R15 least significant, R0 most significant
     chunk64 C         : 1;
     chunk64 TEST      : 1;
@@ -101,58 +103,58 @@ public:
             OPA = instruction & 0x0F;
             if (OPR == 0xF) {
                 switch (OPA) {
-                    case 0b0000:
+                    case 0x0:
                         ACC = C = 0;
                         break;
-                    case 0b0001:
+                    case 0x1:
                         C = 0;
                         break;
-                    case 0b0010:
+                    case 0x2:
                         ACC++;
                         if (ACC == 0) C = 1;
                         break;
-                    case 0b0011:
+                    case 0x3:
                         C = ~C;
                         break;
-                    case 0b0100:
+                    case 0x4:
                         ACC = ~ACC;
                         break;
-                    case 0b0101:
+                    case 0x5:
                         C0 = C;
                         C = ACC >> 3;
                         ACC = ACC << 1;
                         ACC += C0;
                         break;
-                    case 0b0110:
+                    case 0x6:
                         C0 = C;
                         C = ACC & 0b1;
                         ACC = ACC >> 1;
                         ACC += C0 << 3;
                         break;
-                    case 0b0111:
+                    case 0x7:
                         ACC = C;
                         C = 0;
                         break;
-                    case 0b1000:
+                    case 0x8:
                         if (ACC == 0) C = 1;
                         ACC--;
                         break;
-                    case 0b1001:
+                    case 0x9:
                         if (C == 0) ACC = 0b1001;
                         else ACC = 0b1010;
                         C = 0;
                         break;
-                    case 0b1010:
+                    case 0xA:
                         C = 1;
                         break;
-                    case 0b1011:
+                    case 0xB:
                         if (ACC > 0b1001 || C == 1) ACC += 0b0110;
                         if (ACC < 0b0110) C = 1;
                         break;
-                    case 0b1100:
+                    case 0xC:
                         if (!(ACC == 0 || ACC == 1 || ACC == 2 || ACC == 4 || ACC == 8)) ACC = 0xF;
                         break;
-                    case 0b1101:
+                    case 0xD:
                         break;
                     default:
                         break;
@@ -184,12 +186,9 @@ public:
                         cycles -= 2;
                         break;
                     case 0x2:
-                        if ((OPA & 0b0001) == 0b0000) {
+                        if (OPA % 2 == 0) {
                             regPair = OPA >> 1;
-                            regMask = 0xFF << (15 - regPair * 8);
-                            REGISTERS |= regMask;
-                            regMask = ~programRom->fetch(++PC) << (15 - regPair * 8);
-                            REGISTERS &= ~regMask;
+                            registerPairs[regPair] = programRom->fetch(++PC);
                             PC++;
                             cycles--;
                         } else {
@@ -197,17 +196,15 @@ public:
                         }
                         cycles--;
                         break;
-//                    case 0x3:
-//                        if ((OPA & 0b0001) == 0b0000) {
-//
-//                        } else {
-//                            regPair = OPA >> 1;
-//                            PC |= 0xFF;
-//                            pcMask = ~((word) (REGISTERS >> (15 - regPair * 8)));
-//                            pcMask = ~pcMask;
-//                            PC &= pcMask;
-//                        }
-
+                    case 0x3:
+                        if (OPA % 2 == 0) {
+                            regPair = OPA >> 1;
+                            registerPairs[regPair] = dataRam->fetch(registerPairs[0]);
+                            PC++;
+                        } else {
+                            regPair = OPA >> 1;
+                            PC = registerPairs[regPair];
+                        }
                     case 0x4:
                         sAddress = ((short) OPA << 8) + programRom->fetch(PC + 1);
                         PC = sAddress;
@@ -220,35 +217,67 @@ public:
                         PC = (OPA << 8) + programRom->fetch(PC + 1);
                         cycles -= 2;
                     case 0x6:
-                        reg = (REGISTERS >> (15 - OPA * 4)) & 0xFF;
-                        if (reg == 15) {
-                            REGISTERS &= ~((chunk64)(0xF << (15 - OPA * 4)));
+                        regPair = OPA >> 1;
+                        reg = registerPairs[regPair];
+                        if (OPA % 2 == 0) {
+                            reg >>= 4;
+                            reg = ++reg % 16;
+                            registerPairs[regPair] &= 0x0F;
+                            registerPairs[regPair] += reg << 4;
                         } else {
-                            REGISTERS += 1 << (15 - OPA * 4);
+                            reg &= 0xF;
+                            reg = ++reg % 16;
+                            registerPairs[regPair] &= 0xF0;
+                            registerPairs[regPair] += reg;
                         }
                         PC++;
                         cycles--;
                         break;
                     case 0x7:
-                        reg = ((REGISTERS >> (15 - OPA * 4)) << 4) >> 4;
-                        if (reg == 15) {
-                            REGISTERS &= ~((chunk64)(0xF << (15 - OPA * 4)));
-                            PC++;
+                        regPair = OPA >> 1;
+                        reg = registerPairs[regPair];
+                        if (OPA % 2 == 0) {
+                            reg >>= 4;
                         } else {
-                            REGISTERS += 1 << (15 - OPA * 4);
+                            reg &= 0xF;
+                        }
+                        reg = ++reg % 16;
+                        if (reg == 0) {
+                            PC += 2;
+                        } else {
                             PC = programRom->fetch(PC + 1);
+                        }
+                        if (OPA % 2 == 0) {
+                            registerPairs[regPair] &= 0x0F;
+                            registerPairs[regPair] += reg << 4;
+                        } else {
+                            registerPairs[regPair] &= 0xF0;
+                            registerPairs[regPair] += reg;
                         }
                         cycles -= 2;
                         break;
                     case 0x8:
-                        reg = ((REGISTERS >> (15 - OPA * 4)) << 4) >> 4;
+                        regPair = OPA >> 1;
+                        reg = registerPairs[regPair];
+                        if (OPA % 2 == 0) {
+                            reg >>= 4;
+                        } else {
+                            reg &= 0xF;
+                        }
                         ACC += reg;
                         if (ACC < reg) C = 1;
                         PC++;
                         cycles--;
                         break;
                     case 0x9:
-                        reg = -((REGISTERS >> (15 - OPA * 4)) << 4) >> 4;
+                        regPair = OPA >> 1;
+                        reg = registerPairs[regPair];
+                        if (OPA % 2 == 0) {
+                            reg >>= 4;
+                        } else {
+                            reg &= 0xF;
+                        }
+                        reg = -reg;
                         reg += ACC + C;
                         if (reg >= 16) C = 0;
                         ACC = reg;
@@ -256,17 +285,32 @@ public:
                         cycles--;
                         break;
                     case 0xA:
-                        ACC = REGISTERS >> (15 - OPA * 4);
+                        regPair = OPA >> 1;
+                        reg = registerPairs[regPair];
+                        if (OPA % 2 == 0) {
+                            ACC = reg >> 4;
+                        } else {
+                            ACC = reg & 0xF;
+                        }
                         PC++;
                         cycles--;
                         break;
                     case 0xB:
                         pcMask = ACC; //tempACC
-                        ACC = REGISTERS >> (15 - OPA * 4);
-                        regMask = 0xF << (15 - OPA * 4);
-                        REGISTERS |= regMask;
-                        regMask = ~pcMask << (15 - OPA * 4);
-                        REGISTERS &= ~regMask;
+                        regPair = OPA >> 1;
+                        reg = registerPairs[regPair];
+                        if (OPA % 2 == 0) {
+                            ACC = reg >> 4;
+                        } else {
+                            ACC = reg & 0xF;
+                        }
+                        if (OPA % 2 == 0) {
+                            registerPairs[regPair] &= 0x0F;
+                            registerPairs[regPair] += pcMask << 4;
+                        } else {
+                            registerPairs[regPair] &= 0xF0;
+                            registerPairs[regPair] += pcMask;
+                        }
                         PC++;
                         cycles--;
                         break;
@@ -280,6 +324,8 @@ public:
                         ACC = OPA;
                         PC++;
                         cycles--;
+                        break;
+                    default:
                         break;
                 }
             }
@@ -362,7 +408,6 @@ void loadProgram(char* path, word* characters) {
 
 int main() {
     auto* dataMemory = new RAM();
-//    word programMemArray[256] {0x20, 0x00, 0xF0, 0xF2, 0x16, 0x08, 0x40, 0x03, 0x60, 0x40, 0x03};
     word programMemArray[256];
     for (word & i : programMemArray) {
         i = 0;
