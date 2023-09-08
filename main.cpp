@@ -48,7 +48,7 @@ class CPU {
 
 
     word registerPairs[8];
-    chunk64 REGISTERS = 0;  // R15 least significant, R0 most significant
+
     chunk64 C         : 1;
     chunk64 TEST      : 1;
     chunk64 ACC       : 4;
@@ -62,36 +62,6 @@ class CPU {
     RAM* dataRam;
 
 
-    // instruction set
-    constexpr static word NOP = 0x00;
-    constexpr static word JCN = 0x10;
-    constexpr static word FIM = 0x20;
-    constexpr static word FIN = 0x30;
-    constexpr static word JIN = 0x40;
-    constexpr static word JUN = 0x50;
-    constexpr static word JMS = 0x60;
-    constexpr static word INC = 0x70;
-    constexpr static word ISZ = 0x80;
-    constexpr static word ADD = 0x90;
-    constexpr static word SUB = 0xA0;
-    constexpr static word LD  = 0xB0;
-    constexpr static word XCH = 0xC0;
-    constexpr static word BBL = 0xD0;
-    constexpr static word LDM = 0xE0;
-    constexpr static word CLB = 0xF0;
-    constexpr static word CLC = 0xF1;
-    constexpr static word IAC = 0xF2;
-    constexpr static word CMC = 0xF3;
-    constexpr static word CMA = 0xF4;
-    constexpr static word RAL = 0xF5;
-    constexpr static word RAR = 0xF6;
-    constexpr static word TCC = 0xF7;
-    constexpr static word DAC = 0xF8;
-    constexpr static word TCS = 0xF9;
-    constexpr static word STC = 0xFA;
-    constexpr static word DAA = 0xFB;
-    constexpr static word KBP = 0xFC;
-    constexpr static word DCL = 0xFD;
 public:
     void runProgram(int cycles, unsigned short startAddress) {
         PC = startAddress;
@@ -165,7 +135,6 @@ public:
                 bool jump;
                 word reg, regPair, wAddress;
                 short sAddress;
-                chunk64 regMask;
                 unsigned short pcMask;
                 switch (OPR) {
                     case 0x0:
@@ -356,43 +325,6 @@ public:
 
 };
 
-constexpr char wordToChar[16] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                                 'A', 'B', 'C', 'D', 'E', 'F'};
-
-//void generateProgram(char* path, word* characters) {
-//    int numOfCharacters = 0;
-//    std::ifstream stream(path);
-//    std::string line;
-//    if (!stream.is_open()) {
-//        std::cout << "Unable to open file";
-//        exit(1);
-//    }
-//    while (std::getline(stream, line)) {
-//        numOfCharacters += line.length();
-//    }
-//    stream.close();
-//    if (numOfCharacters % 2 == 1) {
-//        numOfCharacters = numOfCharacters / 2 + 1;
-//    } else {
-//        numOfCharacters = numOfCharacters / 2;
-//    }
-//    characters = new word[numOfCharacters];
-//    stream.open(path);
-//    std::map<char, word> charToWord;
-//    for (int i = 0; i < 16; i++) {
-//        charToWord[wordToChar[i]] = i;
-//    }
-//    int i = 0;
-//    char c;
-//    while (stream >> c) {
-//        word byte = charToWord[c];
-//        if (stream >> c) {
-//            byte = byte << 4;
-//            byte += charToWord[c];
-//        }
-//        characters[i++] = byte;
-//    }
-//}
 
 int sizeOfFile(char* path) {
     std::ifstream in_file(path, std::ios::binary);
