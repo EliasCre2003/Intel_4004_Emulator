@@ -10,9 +10,9 @@ def generate_lines(data: bytes) -> list[str]:
         opr = byte >> 4
         opa = byte & 0xF
         if data_pointer in labels:
-            line = f"{labels[data_pointer]}, "
+            line = "{:<9}".format(labels[data_pointer] + ", ")
         else:
-            line = ""
+            line = " " * 9
         match opr:
             case 0x0:
                 line += f"NOP"
