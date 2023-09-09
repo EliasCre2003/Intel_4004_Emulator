@@ -78,14 +78,18 @@ def handle_lines(line: str) -> bool:
             data.append(0x10 + conv_int(tokens[0], 0xF))
             data.append(address_labels[tokens[1]])
         case "FIM":
-            data.append(0x20 + (conv_int(tokens[0], 0x8) << 1))
+            pair = conv_p(tokens[0])
+            data.append(0x20 + (conv_int(pair, 0x8) << 1))
             data.append(conv_int(tokens[1]))
         case "SRC":
-            data.append(0x21 + (conv_int(tokens[0], 0x8) << 1))
+            pair = conv_p(tokens[0])
+            data.append(0x21 + (conv_int(pair, 0x8) << 1))
         case "FIN":
-            data.append(0x30 + (conv_int(tokens[0], 0x8) << 1))
+            pair = conv_p(tokens[0])
+            data.append(0x30 + (conv_int(pair, 0x8) << 1))
         case "JIN":
-            data.append(0x31 + (conv_int(tokens[0], 0x8) << 1))
+            pair = conv_p(tokens[0])
+            data.append(0x31 + (conv_int(pair, 0x8) << 1))
         case "JUN":
             address = address_labels[tokens[0]]
             data.append(0x40 + (address >> 8))
@@ -95,18 +99,24 @@ def handle_lines(line: str) -> bool:
             data.append(0x50 + (address >> 8))
             data.append(address & 0xFF)
         case "INC":
-            data.append(0x60 + conv_int(tokens[0], 0xF))
+            reg = conv_r(tokens[0])
+            data.append(0x60 + conv_int(reg, 0xF))
         case "ISZ":
-            data.append(0x70 + conv_int(tokens[0], 0xF))
+            reg = conv_r(tokens[0])
+            data.append(0x70 + conv_int(reg, 0xF))
             data.append(address_labels[tokens[1]] & 0xFF)
         case "ADD":
-            data.append(0x80 + conv_int(tokens[0], 0xF))
+            reg = conv_r(tokens[0])
+            data.append(0x80 + conv_int(reg, 0xF))
         case "SUB":
-            data.append(0x90 + conv_int(tokens[0], 0xF))
+            reg = conv_r(tokens[0])
+            data.append(0x90 + conv_int(reg, 0xF))
         case "LD":
-            data.append(0xA0 + conv_int(tokens[0], 0xF))
+            reg = conv_r(tokens[0])
+            data.append(0xA0 + conv_int(reg, 0xF))
         case "XCH":
-            data.append(0xB0 + conv_int(tokens[0], 0xF))
+            reg = conv_r(tokens[0])
+            data.append(0xB0 + conv_int(reg, 0xF))
         case "BBL":
             data.append(0xC0 + conv_int(tokens[0], 0xF))
         case "LDM":
@@ -205,19 +215,41 @@ def add_label(line: str) -> bool:
     return True
 
 
-def conv_int(num: str, size_limit: int = 0xFF) -> int:
-    len_num = len(num)
-    if len_num > 2 and num[:2] == "0x":
-        dat = int(num, 16)
-    elif len_num > 2 and num[:2] == "0b":
-        dat = int(num, 2)
+def conv_int(num: str or int, size_limit: int = 0xFF) -> int:
+    if type(num) is str:
+        len_num = len(num)
+        if len_num > 2 and num[:2] == "0x":
+            dat = int(num, 16)
+        elif len_num > 2 and num[:2] == "0b":
+            dat = int(num, 2)
+        else:
+            dat = int(num, 10)
+    elif type(num) is int:
+        dat = num
     else:
-        dat = int(num, 10)
+        raise TypeError
     if 0 <= dat <= size_limit:
         return dat
     else:
         print(f"Error: {num} is out of range")
         raise ValueError
+
+
+def conv_r(r: str) -> int or str:
+    if len(r) == 2 and r[0] == "R" and 0 <= (reg := int(r[1])) < 16:
+        return reg
+    else:
+        return r
+
+
+def conv_p(p: str) -> int or str:
+    if (len(p) == 4 and p[0] == "R" and p[2] == "R" and int(p[1]) % 2 == 0
+            and int(p[1]) <= 14 and int(p[3]) == (int(p[1]) + 1)):
+        return int(p[1]) // 2
+    elif len(p) == 2 and p[0] == "P" and 0 <= (pair := int(p[1])) < 8:
+        return pair
+    else:
+        return p
 
 
 def trim(tokens: list[str]) -> list[str]:
@@ -231,7 +263,7 @@ def trim(tokens: list[str]) -> list[str]:
 
 
 def main():
-    with open("test.txt", "r") as f:
+    with open("prime_generator.txt", "r") as f:
         lines = f.readlines()
     for line in lines:
         if not add_label(line):
@@ -242,7 +274,7 @@ def main():
             print("Error: Invalid line")
             break
     print(data)
-    with open("test.bin", "wb") as f:
+    with open("prime_generator.bin", "wb") as f:
         f.write(bytearray(data))
 
 
