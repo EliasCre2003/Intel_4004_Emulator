@@ -205,12 +205,13 @@ public:
                     case 0x5: // Instruction: JMS
                         PC3 = PC2;
                         PC2 = PC1;
-                        PC1 = PC + 1;
+                        PC1 = PC + 2;
                         PC = (OPA << 8) + programRom->read(PC + 1);
                         cycles -= 2;
+                        break;
                     case 0x6: // Instruction: INC
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 0) {
+                        if (OPA % 2 == 1) {
                             reg = registerPairs[regPair] >> 4;
                             reg++;
                             registerPairs[regPair] &= 0x0F;
@@ -226,7 +227,7 @@ public:
                         break;
                     case 0x7: // Instruction: ISZ
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 0) {
+                        if (OPA % 2 == 1) {
                             reg = registerPairs[regPair] >> 4;
                         } else {
                             reg = registerPairs[regPair];
@@ -237,7 +238,7 @@ public:
                         } else {
                             PC = programRom->read(PC + 1);
                         }
-                        if (OPA % 2 == 0) {
+                        if (OPA % 2 == 1) {
                             registerPairs[regPair] &= 0x0F;
                             registerPairs[regPair] += reg << 4;
                         } else {
@@ -248,19 +249,23 @@ public:
                         break;
                     case 0x8: // Instruction: ADD
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 0) {
+                        if (OPA % 2 == 1) {
                             reg = registerPairs[regPair] >> 4;
                         } else {
                             reg = registerPairs[regPair];
                         }
                         ACC += reg;
-                        if (ACC < reg) C = 1;
+                        if (ACC < reg) {
+                            C = 1;
+                        } else {
+                            C = 0;
+                        }
                         PC++;
                         cycles--;
                         break;
                     case 0x9: // Instruction: SUB
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 0) {
+                        if (OPA % 2 == 1) {
                             address8 = ~registerPairs[regPair] >> 4;
                         } else {
                             address8 = ~registerPairs[regPair];
@@ -277,10 +282,10 @@ public:
                         break;
                     case 0xA: // Instruction: LD
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 0) {
-                            reg = registerPairs[regPair] >> 4;
+                        if (OPA % 2 == 1) {
+                            ACC = registerPairs[regPair] >> 4;
                         } else {
-                            reg = registerPairs[regPair];
+                            ACC = registerPairs[regPair];
                         }
                         PC++;
                         cycles--;
@@ -288,13 +293,13 @@ public:
                     case 0xB: // Instruction: XCH
                         address8 = ACC; //tempACC
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 0) {
+                        if (OPA % 2 == 1) {
                             reg = registerPairs[regPair] >> 4;
                         } else {
                             reg = registerPairs[regPair];
                         }
                         ACC = reg;
-                        if (OPA % 2 == 0) {
+                        if (OPA % 2 == 1) {
                             registerPairs[regPair] &= 0x0F;
                             registerPairs[regPair] += address8 << 4;
                         } else {
@@ -309,8 +314,8 @@ public:
                         PC = PC1;
                         PC1 = PC2;
                         PC2 = PC3;
-                        PC++;
                         cycles--;
+                        break;
                     case 0x0D: // Instruction: LDM
                         ACC = OPA;
                         PC++;
@@ -515,10 +520,10 @@ int main() {
     for (word & i : programMemArray) {
         i = 0;
     }
-    loadProgram("C:\\Users\\elias\\CLionProjects\\Intel_4004_Emulator\\test.bin", programMemArray);
+    loadProgram("C:\\Users\\elias\\CLionProjects\\Intel_4004_Emulator\\prime_generator.bin", programMemArray);
     auto* programMemory = new ROM(programMemArray);
     auto* cpu = new CPU(programMemory);
-    cpu->runProgram(5000000, 0, 0);
+    cpu->runProgram(50000000, 0, 0);
 
     return 0;
 }
