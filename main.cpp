@@ -20,24 +20,24 @@ using uint64 = unsigned __int64;
 class ROM {
 protected:
     word pageCount : 4;
-    word* memory[16]{};
+    word memory[256 * 16]{};
 public:
     explicit ROM(word* page) {
-        this->memory[0] = page;
+        for (int i = 0; i< 256; i++) {
+            this->memory[i] = page[i];
+        }
         pageCount++;
     }
     word read(uint16 address)
     {
-        word page = address << 8;
-        address %= 256;
-        return memory[page][address];
+        return memory[address];
     }
-    void addPage(word* page) {
-        if (pageCount > 0) {
-            this->memory[pageCount] = page;
-            pageCount++;
-        }
-    }
+//    void addPage(word* page) {
+//        if (pageCount > 0) {
+//            this->memory[pageCount] = page;
+//            pageCount++;
+//        }
+//    }
     word ioPorts : 4;
 };
 
@@ -67,7 +67,11 @@ public:
         memory[index] |= data;
     }
     byte readMain() {
-        return memory[chip << 6 | reg << 4 | character];
+        index = chip << 5 | reg << 3 | character >> 1;
+        if (character % 2 == 0) {
+            return memory[index] >> 4;
+        }
+        return memory[index] & 0x0F;
     }
     void writeStatus0(byte data) {
         index = chip << 3 | reg << 1 | 0;
@@ -119,25 +123,26 @@ public:
 
 class CPU {
 
+    RAM* ramBanks[8]{};
     word registerPairs[8]{};
-    uint64 C    : 1;
-    uint64 C0   : 1;
-    uint64 TEST : 1;
-    uint64 ACC  : 4;
-    uint64 OPA  : 4;
-    uint64 OPR  : 4;
-    uint64 PC   : 12;
-    uint64 PC1  : 12;
-    uint64 PC2  : 12;
-    uint64 PC3  : 12;
     ROM* programRom{};
-    RAM* dataRam{};
+    uint64 C     : 1;
+    uint64 C0    : 1;
+    uint64 TEST  : 1;
+    uint64 ACC   : 4;
+    uint64 OPA   : 4;
+    uint64 OPR   : 4;
+    uint64 PC    : 12;
+    uint64 PC1   : 12;
+    uint64 PC2   : 12;
+    uint64 PC3   : 12;
+    uint16 CM : 4;
 
     uint32 reg : 4;
     uint32 regPair : 3;
     uint32 pcMask : 12;
     uint32 address12 : 12;
-    word address8 = 0;
+    uint16 address8 : 8;
 
 
 public:
@@ -148,7 +153,266 @@ public:
             instruction = programRom->read(PC);
             OPR = instruction >> 4;
             OPA = instruction & 0x0F;
-            if (OPR == 0xF) {
+            if (OPR <= 0xD) {
+                bool jump;
+                switch (OPR) {
+                    case 0x0: // Instruction: NOP
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x1: // Instruction: JCN
+                        jump = ((OPA & 0b0100) == 0b0100 && ACC == 0) ||
+                               ((OPA & 0b0010) == 0b0010 && C == 1) ||
+                               ((OPA & 0b0001) == 0b0001 && TEST == 0);
+                        if ((OPA & 0b1000) == 0b1000) jump = !jump;
+                        if (jump) {
+                            PC = programRom->read(++PC);
+                        } else {
+                            PC += 2;
+                        }
+                        cycles -= 2;
+                        break;
+                    case 0x2:
+                        if (OPA % 2 == 0) { // Instruction: FIM
+                            regPair = OPA >> 1;
+                            registerPairs[regPair] = programRom->read(++PC);
+                            PC++;
+                            cycles--;
+                        } else { // Instruction: SRC
+                            regPair = OPA >> 1;
+                            address8 = registerPairs[regPair];
+                            ramBanks[CM]->select(address8);
+                            PC++;
+                            cycles--;
+                        }
+                        cycles--;
+                        break;
+                    case 0x3:
+                        if (OPA % 2 == 0) { // Instruction: FIN
+                            regPair = OPA >> 1;
+                            address12 = PC & 0xF00;
+                            registerPairs[regPair] = programRom->read(address12 + registerPairs[0]);
+                            PC++;
+                        } else { // Instruction: JIN
+                            regPair = OPA >> 1;
+                            PC = registerPairs[regPair];
+                        }
+                    case 0x4: // Instruction: JUN
+                        address12 = (OPA << 8) + programRom->read(PC + 1);
+                        PC = address12;
+                        cycles -= 2;
+                        break;
+                    case 0x5: // Instruction: JMS
+                        PC3 = PC2;
+                        PC2 = PC1;
+                        PC1 = PC + 1;
+                        PC = (OPA << 8) + programRom->read(PC + 1);
+                        cycles -= 2;
+                    case 0x6: // Instruction: INC
+                        regPair = OPA >> 1;
+                        if (OPA % 2 == 0) {
+                            reg = registerPairs[regPair] >> 4;
+                            reg++;
+                            registerPairs[regPair] &= 0x0F;
+                            registerPairs[regPair] |= reg << 4;
+                        } else {
+                            reg = registerPairs[regPair];
+                            reg = ++reg;
+                            registerPairs[regPair] &= 0xF0;
+                            registerPairs[regPair] |= reg;
+                        }
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x7: // Instruction: ISZ
+                        regPair = OPA >> 1;
+                        if (OPA % 2 == 0) {
+                            reg = registerPairs[regPair] >> 4;
+                        } else {
+                            reg = registerPairs[regPair];
+                        }
+                        reg++;
+                        if (reg == 0) {
+                            PC += 2;
+                        } else {
+                            PC = programRom->read(PC + 1);
+                        }
+                        if (OPA % 2 == 0) {
+                            registerPairs[regPair] &= 0x0F;
+                            registerPairs[regPair] += reg << 4;
+                        } else {
+                            registerPairs[regPair] &= 0xF0;
+                            registerPairs[regPair] += reg;
+                        }
+                        cycles -= 2;
+                        break;
+                    case 0x8: // Instruction: ADD
+                        regPair = OPA >> 1;
+                        if (OPA % 2 == 0) {
+                            reg = registerPairs[regPair] >> 4;
+                        } else {
+                            reg = registerPairs[regPair];
+                        }
+                        ACC += reg;
+                        if (ACC < reg) C = 1;
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x9: // Instruction: SUB
+                        regPair = OPA >> 1;
+                        if (OPA % 2 == 0) {
+                            address8 = ~registerPairs[regPair] >> 4;
+                        } else {
+                            address8 = ~registerPairs[regPair];
+                        }
+                        address8 += ACC + C;
+                        if (address8 >= 16) {
+                            C = 0;
+                        } else {
+                            C = 1;
+                        }
+                        ACC = address8;
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0xA: // Instruction: LD
+                        regPair = OPA >> 1;
+                        if (OPA % 2 == 0) {
+                            reg = registerPairs[regPair] >> 4;
+                        } else {
+                            reg = registerPairs[regPair];
+                        }
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0xB: // Instruction: XCH
+                        address8 = ACC; //tempACC
+                        regPair = OPA >> 1;
+                        if (OPA % 2 == 0) {
+                            reg = registerPairs[regPair] >> 4;
+                        } else {
+                            reg = registerPairs[regPair];
+                        }
+                        ACC = reg;
+                        if (OPA % 2 == 0) {
+                            registerPairs[regPair] &= 0x0F;
+                            registerPairs[regPair] += address8 << 4;
+                        } else {
+                            registerPairs[regPair] &= 0xF0;
+                            registerPairs[regPair] += address8;
+                        }
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0xC: // Instruction: BBL
+                        ACC = OPA;
+                        PC = PC1;
+                        PC1 = PC2;
+                        PC2 = PC3;
+                        PC++;
+                        cycles--;
+                    case 0x0D: // Instruction: LDM
+                        ACC = OPA;
+                        PC++;
+                        cycles--;
+                        break;
+                    default:
+                        break;
+                }
+            } else if (OPR == 0xE) {
+                switch (OPA) {
+                    case 0x0: // Instruction: WRM
+                        ramBanks[CM]->writeMain(ACC);
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x1: // Instruction: WMP
+                        ramBanks[CM]->writeOutput(ACC);
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x2: // Instruction: WRR
+                        programRom->ioPorts = ACC;
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x3: // Instruction: WPM (only used for special peripherals)
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x4: // Instruction: WR0
+                        ramBanks[CM]->writeStatus0(ACC);
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x5: // Instruction: WR1
+                        ramBanks[CM]->writeStatus1(ACC);
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x6: // Instruction: WR2
+                        ramBanks[CM]->writeStatus2(ACC);
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x7: // Instruction: WR3
+                        ramBanks[CM]->writeStatus3(ACC);
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x8: // Instruction: SBM
+                        address8 = ~ramBanks[CM]->readMain(); // memory character
+                        address8 += ACC + C;
+                        if (address8 >= 16) {
+                            C = 0;
+                        } else {
+                            C = 1;
+                        }
+                        ACC = address8;
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0x9: // Instruction: RDM
+                        ACC = ramBanks[CM]->readMain();
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0xA: // Instruction: RDR
+                        ACC = programRom->ioPorts;
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0xB: // Instruction: ADM
+                        reg = ACC; //tempACC
+                        ACC += ramBanks[CM]->readMain();
+                        if (ACC < reg) {
+                            C = 1;
+                        }
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0xC: // Instruction: RD0
+                        ACC = ramBanks[CM]->readStatus0();
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0xD: // Instruction: RD1
+                        ACC = ramBanks[CM]->readStatus1();
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0xE: // Instruction: RD2
+                        ACC = ramBanks[CM]->readStatus2();
+                        PC++;
+                        cycles--;
+                        break;
+                    case 0xF: // Instruction: RD3
+                        ACC = ramBanks[CM]->readStatus3();
+                        PC++;
+                        cycles--;
+                        break;
+                }
+            } else if (OPR == 0xF) {
                 switch (OPA) {
                     case 0x0: // Instruction: CLB
                         ACC = C = 0;
@@ -202,179 +466,15 @@ public:
                         if (!(ACC == 0 || ACC == 1 || ACC == 2 || ACC == 4 || ACC == 8)) ACC = 0xF;
                         break;
                     case 0xD: // Instruction: DCL
+                        CM = ACC;
+                        PC++;
+                        cycles--;
                         break;
                     default:
                         break;
                 }
                 PC++;
                 cycles--;
-            } else {
-                bool jump;
-                switch (OPR) {
-                    case 0x0: // Instruction: NOP
-                        PC++;
-                        cycles--;
-                        break;
-                    case 0x1: // Instruction: JCN
-                        jump = ((OPA & 0b0100) == 0b0100 && ACC  == 0) ||
-                               ((OPA & 0b0010) == 0b0010 && C    == 1) ||
-                               ((OPA & 0b0001) == 0b0001 && TEST == 0);
-                        if ((OPA & 0b1000) == 0b1000) jump = !jump;
-                        if (jump) {
-                            PC = programRom->read(++PC);
-                        } else {
-                            PC += 2;
-                        }
-                        cycles -= 2;
-                        break;
-                    case 0x2:
-                        if (OPA % 2 == 0) { // Instruction: FIM
-                            regPair = OPA >> 1;
-                            registerPairs[regPair] = programRom->read(++PC);
-                            PC++;
-                            cycles--;
-                        } else { // Instruction: SRC
-                            regPair = OPA >> 1;
-                            address8 = registerPairs[regPair];
-                            dataRam->select(address8);
-                            PC++;
-                            cycles--;
-                        }
-                        cycles--;
-                        break;
-                    case 0x3:
-                        if (OPA % 2 == 0) { // Instruction: FIN
-                            regPair = OPA >> 1;
-                            address12 = PC & 0xF00;
-                            registerPairs[regPair] = programRom->read(address12 + registerPairs[0]);
-                            PC++;
-                        } else { // Instruction: JIN
-                            regPair = OPA >> 1;
-                            PC = registerPairs[regPair];
-                        }
-                    case 0x4: // Instruction: JUN
-                        address12 = (OPA << 8) + programRom->read(PC + 1);
-                        PC = address12;
-                        cycles -= 2;
-                        break;
-                    case 0x5: // Instruction: JMS
-                        PC3 = PC2;
-                        PC2 = PC1;
-                        PC1 = PC+1;
-                        PC = (OPA << 8) + programRom->read(PC + 1);
-                        cycles -= 2;
-                    case 0x6: // Instruction: INC
-                        regPair = OPA >> 1;
-                        reg = registerPairs[regPair];
-                        if (OPA % 2 == 0) {
-                            reg >>= 4;
-                            reg = ++reg % 16;
-                            registerPairs[regPair] &= 0x0F;
-                            registerPairs[regPair] += reg << 4;
-                        } else {
-                            reg &= 0xF;
-                            reg = ++reg % 16;
-                            registerPairs[regPair] &= 0xF0;
-                            registerPairs[regPair] += reg;
-                        }
-                        PC++;
-                        cycles--;
-                        break;
-                    case 0x7: // Instruction: ISZ
-                        regPair = OPA >> 1;
-                        reg = registerPairs[regPair];
-                        if (OPA % 2 == 0) {
-                            reg >>= 4;
-                        } else {
-                            reg &= 0xF;
-                        }
-                        reg = ++reg % 16;
-                        if (reg == 0) {
-                            PC += 2;
-                        } else {
-                            PC = programRom->read(PC + 1);
-                        }
-                        if (OPA % 2 == 0) {
-                            registerPairs[regPair] &= 0x0F;
-                            registerPairs[regPair] += reg << 4;
-                        } else {
-                            registerPairs[regPair] &= 0xF0;
-                            registerPairs[regPair] += reg;
-                        }
-                        cycles -= 2;
-                        break;
-                    case 0x8: // Instruction: ADD
-                        regPair = OPA >> 1;
-                        reg = registerPairs[regPair];
-                        if (OPA % 2 == 0) {
-                            reg >>= 4;
-                        } else {
-                            reg &= 0xF;
-                        }
-                        ACC += reg;
-                        if (ACC < reg) C = 1;
-                        PC++;
-                        cycles--;
-                        break;
-                    case 0x9: // Instruction: SUB
-                        regPair = OPA >> 1;
-                        reg = registerPairs[regPair];
-                        if (OPA % 2 == 0) {
-                            reg >>= 4;
-                        } else {
-                            reg &= 0xF;
-                        }
-                        reg = -reg;
-                        reg += ACC + C;
-                        if (reg >= 16) C = 0;
-                        ACC = reg;
-                        PC++;
-                        cycles--;
-                        break;
-                    case 0xA: // Instruction: LD
-                        regPair = OPA >> 1;
-                        reg = registerPairs[regPair];
-                        if (OPA % 2 == 0) {
-                            ACC = reg >> 4;
-                        } else {
-                            ACC = reg & 0xF;
-                        }
-                        PC++;
-                        cycles--;
-                        break;
-                    case 0xB: // Instruction: XCH
-                        pcMask = ACC; //tempACC
-                        regPair = OPA >> 1;
-                        reg = registerPairs[regPair];
-                        if (OPA % 2 == 0) {
-                            ACC = reg >> 4;
-                        } else {
-                            ACC = reg & 0xF;
-                        }
-                        if (OPA % 2 == 0) {
-                            registerPairs[regPair] &= 0x0F;
-                            registerPairs[regPair] += pcMask << 4;
-                        } else {
-                            registerPairs[regPair] &= 0xF0;
-                            registerPairs[regPair] += pcMask;
-                        }
-                        PC++;
-                        cycles--;
-                        break;
-                    case 0xC: // Instruction: BBL
-                        ACC = OPA;
-                        PC = PC1;
-                        PC1 = PC2;
-                        PC2 = PC3;
-                        cycles--;
-                    case 0x0D: // Instruction: LDM
-                        ACC = OPA;
-                        PC++;
-                        cycles--;
-                        break;
-                    default:
-                        break;
-                }
             }
         }
     }
@@ -382,23 +482,14 @@ public:
 public:
     CPU()
     {
-        C = ACC = OPA = OPR = PC = PC1 = PC2 = PC3 = TEST = 0;
-    }
-    explicit CPU(RAM* dataRam) : CPU()
-    {
-        this->dataRam = dataRam;
+        C = ACC = OPA = OPR = PC = PC1 = PC2 = PC3 = CM = TEST = 0;
+        for (auto & ram : ramBanks) {
+            ram = new RAM();
+        }
     }
     explicit CPU(ROM* programRom) : CPU()
     {
         this->programRom = programRom;
-    }
-    CPU(RAM* dataRam, ROM* programRom) : CPU()
-    {
-        this->dataRam = dataRam;
-        this->programRom = programRom;
-    }
-    void connectDataRam(RAM* memory) {
-        dataRam = memory;
     }
     void connectProgramRom(ROM* memory) {
         programRom = memory;
@@ -420,14 +511,13 @@ void loadProgram(char* path, word* characters) {
 }
 
 int main() {
-    auto* dataMemory = new RAM();
     word programMemArray[256];
     for (word & i : programMemArray) {
         i = 0;
     }
-    loadProgram("C:\\Users\\elias\\CLionProjects\\Intel 4004 Emulator\\test.bin", programMemArray);
+    loadProgram("C:\\Users\\elias\\CLionProjects\\Intel_4004_Emulator\\test.bin", programMemArray);
     auto* programMemory = new ROM(programMemArray);
-    auto* cpu = new CPU(dataMemory, programMemory);
+    auto* cpu = new CPU(programMemory);
     cpu->runProgram(5000000, 0, 0);
 
     return 0;

@@ -55,7 +55,7 @@ two_word_instructions = [
 ]
 
 data: list[int] = []
-labels: dict[str, int] = {}
+address_labels: dict[str, int] = {}
 label_address_counter = 0
 
 
@@ -76,7 +76,7 @@ def handle_lines(line: str) -> bool:
             data.append(0x00)
         case "JCN":
             data.append(0x10 + conv_int(tokens[0], 0xF))
-            data.append(labels[tokens[1]])
+            data.append(address_labels[tokens[1]])
         case "FIM":
             data.append(0x20 + (conv_int(tokens[0], 0x8) << 1))
             data.append(conv_int(tokens[1]))
@@ -87,18 +87,18 @@ def handle_lines(line: str) -> bool:
         case "JIN":
             data.append(0x31 + (conv_int(tokens[0], 0x8) << 1))
         case "JUN":
-            address = labels[tokens[0]]
+            address = address_labels[tokens[0]]
             data.append(0x40 + (address >> 8))
             data.append(address & 0xFF)
         case "JMS":
-            address = labels[tokens[0]]
+            address = address_labels[tokens[0]]
             data.append(0x50 + (address >> 8))
             data.append(address & 0xFF)
         case "INC":
             data.append(0x60 + conv_int(tokens[0], 0xF))
         case "ISZ":
             data.append(0x70 + conv_int(tokens[0], 0xF))
-            data.append(labels[tokens[1]] & 0xFF)
+            data.append(address_labels[tokens[1]] & 0xFF)
         case "ADD":
             data.append(0x80 + conv_int(tokens[0], 0xF))
         case "SUB":
@@ -193,11 +193,11 @@ def add_label(line: str) -> bool:
     elif len(line) > 2:
         print("Error: Invalid line")
         return False
-    if (line[0] in instructions) or (line[0] in labels):
+    if (line[0] in instructions) or (line[0] in address_labels):
         return False
     if line[0].isnumeric():
         return False
-    labels[line[0]] = label_address_counter-1
+    address_labels[line[0]] = label_address_counter - 1
     rest = line[1].split(" ")
     rest = trim(rest)
     if rest[0] in two_word_instructions:
@@ -231,7 +231,7 @@ def trim(tokens: list[str]) -> list[str]:
 
 
 def main():
-    with open("test2.txt", "r") as f:
+    with open("test.txt", "r") as f:
         lines = f.readlines()
     for line in lines:
         if not add_label(line):

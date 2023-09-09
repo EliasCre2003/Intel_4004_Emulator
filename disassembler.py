@@ -131,8 +131,9 @@ def generate_lines(data: bytes) -> list[str]:
                         line += f"KBP"
                     case 0xD:
                         line += f"DCL"
-                    case _:
-                        raise Exception("Invalid opcode")
+                    # case _:
+
+                        # raise Exception("Invalid opcode")
                 data_pointer += 1
         lines.append(line)
     return lines
@@ -166,11 +167,11 @@ def generate_labels(data: bytes) -> None:
 
 
 def main():
-    with open("test.bin", "rb") as f:
+    with open("test2.bin", "rb") as f:
         data = f.read()
     generate_labels(data)
     lines = generate_lines(data)
-    with open("test2.txt", "w") as f:
+    with open("test3.txt", "w") as f:
         for line in lines:
             f.write(line + "\n")
 

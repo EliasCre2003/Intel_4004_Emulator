@@ -1,0 +1,197 @@
+         WRR
+         BBL 15
+         FIM 5 65
+         JMS LBL_23
+         JMS LBL_3
+         FIN 0
+         JMS LBL_3
+         JMS LBL_3
+         JMS LBL_3
+         JMS LBL_3
+         FIM 5 66
+         JMS LBL_9
+         JMS LBL_4
+         JUN LBL_5
+         JMS LBL_9
+         JMS LBL_7
+         JUN LBL_8
+LBL_35,  JMS LBL_9
+         JUN LBL_9
+         FIM 1 203
+         CLB
+         SRC 5
+         WMP
+LBL_10,  SRC 0
+         WRM
+         IAC
+         ISZ 1 LBL_10
+         WR0
+         IAC
+         WR1
+         IAC
+         WR2
+         IAC
+         WR3
+         INC 0
+         ISZ 2 LBL_10
+         STC
+LBL_11,  JMS LBL_10
+         ISZ 3 LBL_11
+         SRC 2
+         STC
+LBL_18,  RAL
+         WMP
+         JCN 10 LBL_12
+LBL_16,  JCN 12 LBL_13
+LBL_17,  JCN 9 LBL_15
+LBL_12,  JCN 2 LBL_15
+         JCN 4 LBL_15
+         JCN 1 LBL_16
+         JUN LBL_17
+LBL_13,  CLB
+LBL_15,  JUN LBL_18
+LBL_15,  FIM 6 102
+         FIM 7 89
+         FIM 0 0
+         JIN 6
+LBL_21,  SRC 0
+         ADD 4
+         ADD 5
+         WRM
+         RAR
+         ISZ 4 LBL_21
+         ISZ 5 LBL_21
+         JMS LBL_23
+         JUN LBL_24
+         JMS LBL_23
+LBL_24,  SRC 0
+         SUB 4
+         SUB 5
+         WRM
+         CLB
+         ISZ 4 LBL_24
+         ISZ 5 LBL_24
+         CLB
+         SRC 5
+         WMP
+         JIN 7
+LBL_24,  STC
+         INC 8
+         LD 8
+         WRM
+         XCH 9
+         LD 9
+         WRR
+         DAA
+         WRM
+         ISZ 4 LBL_24
+         CLB
+LBL_24,  DAC
+         WRM
+         KBP
+         WRM
+         ISZ 4 LBL_24
+         CLB
+LBL_25,  DAA
+         WRM
+         IAC
+         ISZ 4 LBL_25
+LBL_26,  LDM 15
+         WRM
+         TCC
+         WRM
+         JCN 12 LBL_26
+         CLB
+         SRC 5
+         WMP
+         LDM 15
+         TCS
+         WRM
+         STC
+         TCS
+         WRM
+LBL_27,  CMA
+         RAR
+         WRM
+         ISZ 4 LBL_27
+         FIM 2 192
+LBL_29,  SRC 0
+         RDM
+         ISZ 1 LBL_29
+         RD0
+         RD1
+         RD2
+         RD3
+         INC 0
+         ISZ 4 LBL_29
+         FIM 0 32
+         FIM 1 48
+LBL_29,  SRC 0
+         SBM
+         INC 1
+         SRC 1
+         SBM
+         WRM
+         ISZ 3 LBL_29
+         FIM 0 0
+         FIM 0 16
+         CLB
+         SRC 5
+         WMP
+LBL_31,  SRC 0
+         ADM
+         INC 1
+         SRC 1
+         ADM
+         WRM
+         ISZ 3 LBL_31
+         SRC 5
+         RD0
+         JCN 4 LBL_32
+         LDM 8
+         SRC 0
+         WMP
+         CLB
+         SRC 5
+         WR0
+LBL_33,  JCN 9 LBL_33
+         JUN LBL_35
+LBL_32,  IAC
+         WR0
+         LDM 2
+         SRC 0
+         WMP
+         JUN LBL_35
+LBL_23,  SRC 5
+         LD 11
+         CLC
+         WMP
+         RAL
+         XCH 11
+         BBL 0
+LBL_3,   SRC 0
+         SRC 1
+         SRC 2
+         SRC 3
+         SRC 4
+         SRC 5
+         SRC 6
+         SRC 7
+         BBL 0
+LBL_3,   FIN 1
+         FIN 2
+LBL_30,  FIN 3
+         FIN 4
+         FIN 5
+         FIN 6
+         FIN 7
+         FIN 0
+         BBL 0
+LBL_10,  LD 4
+         RAL
+         DCL
+         XCH 4
+         RDR
+         BBL 0
+         NOP
+         NOP
