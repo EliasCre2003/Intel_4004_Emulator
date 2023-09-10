@@ -1,31 +1,47 @@
             JUN START
 
-INC_RP0,    ISZ R0 NOINC0
-            INC R1
-NOINC0,     BBL 0
-
-INC_RP1,    LDM 2
+INC_P1,     LDM 2
             XCH R2
             ADD 2
             XCH R2
-            JCN 0b1010 NOINC1
+            JCN 0b1010 NOCARRY1
             INC R3
-NOINC1,     BBL 0
+NOCARRY1,   BBL 0
 
-SAVE_RP1,   LD R3
-            SRC R0R1
-            WRM
-            JMS INC_RP0
-            LD R2
-            SRC R0R1
-            WRM
-            JMS INC_RP0
+INC_P2,     ISZ R4 NOCARRY2
+            INC R5
+NOCARRY2,   BBL 0
+
+INC_P3,     ISZ R6 NOCARRY3
+            INC R5
+NOCARRY3,   BBL 0
+
+LOAD_P0,    LD  R1
+            SRC P0
+            RDM
+            JMS INC_P2
+            LD  R1
+            SRC P0
+            RDM
+            JMS INC_P2
             BBL 0
 
-START,      FIM R0R1 0 ; address pointer
-            FIM R2R3 2 ; prime
-TEST,       JMS SAVE_RP1
-            JMS INC_RP1
+SAVE_P1,    LD  R3
+            SRC P3
+            WRM
+            JMS INC_P3
+            LD  R2
+            SRC P3
+            WRM
+            JMS INC_P3
+            BBL 0
+
+START,      FIM P0 0 ; comp prime
+            FIM P1 2 ; prime
+            FIM P2 0 ; load address
+            FIM P3 0 ; save address
+TEST,       JMS SAVE_P1
+            JMS INC_P1
             JUN TEST
 
 STOP,       JUN STOP
