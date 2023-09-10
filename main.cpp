@@ -17,28 +17,37 @@ using uint16 = unsigned __int16;
 using uint32 = unsigned __int32;
 using uint64 = unsigned __int64;
 
+
+class File {
+public:
+    static int sizeOfFile(char *path) {
+        std::ifstream in_file(path, std::ios::binary);
+        in_file.seekg(0, std::ios::end);
+        return in_file.tellg();
+    }
+    static void loadFile(char *path, word *characters) {
+        std::ifstream file(path, std::ios::in | std::ios::binary);
+        file.read((char *) characters, sizeOfFile(path));
+        file.close();
+    }
+};
+
 class ROM {
 protected:
-    word pageCount : 4;
     word memory[256 * 16]{};
 public:
-    explicit ROM(word* page) {
-        for (int i = 0; i< 256; i++) {
-            this->memory[i] = page[i];
-        }
-        pageCount++;
+    word ioPorts : 4;
+    explicit ROM(word* data) {
+        std::copy(data, data + 256 * 16, memory);
+        ioPorts = 0;
+    }
+    ROM(char* binPath) {
+        File::loadFile(binPath, memory);
     }
     word read(uint16 address)
     {
         return memory[address];
     }
-//    void addPage(word* page) {
-//        if (pageCount > 0) {
-//            this->memory[pageCount] = page;
-//            pageCount++;
-//        }
-//    }
-    word ioPorts : 4;
 };
 
 class RAM {
@@ -133,14 +142,11 @@ class CPU {
     uint64 OPA   : 4;
     uint64 OPR   : 4;
     uint64 PC    : 12;
-    uint64 PC1   : 12;
-    uint64 PC2   : 12;
-    uint64 PC3   : 12;
-    uint16 CM : 4;
+    uint64 STACK : 36;
+    uint16 CM    : 4;
 
     uint32 reg : 4;
     uint32 regPair : 3;
-    uint32 pcMask : 12;
     uint32 address12 : 12;
     uint16 address8 : 8;
 
@@ -173,28 +179,23 @@ public:
                         cycles -= 2;
                         break;
                     case 0x2:
+                        regPair = OPA >> 1;
                         if (OPA % 2 == 0) { // Instruction: FIM
-                            regPair = OPA >> 1;
                             registerPairs[regPair] = programRom->read(++PC);
-                            PC++;
-                            cycles--;
                         } else { // Instruction: SRC
-                            regPair = OPA >> 1;
                             address8 = registerPairs[regPair];
                             ramBanks[CM]->select(address8);
-                            PC++;
-                            cycles--;
                         }
-                        cycles--;
+                        PC++;
+                        cycles -= 2;
                         break;
                     case 0x3:
+                        regPair = OPA >> 1;
                         if (OPA % 2 == 0) { // Instruction: FIN
-                            regPair = OPA >> 1;
                             address12 = PC & 0xF00;
                             registerPairs[regPair] = programRom->read(address12 + registerPairs[0]);
                             PC++;
                         } else { // Instruction: JIN
-                            regPair = OPA >> 1;
                             PC = registerPairs[regPair];
                         }
                     case 0x4: // Instruction: JUN
@@ -203,9 +204,8 @@ public:
                         cycles -= 2;
                         break;
                     case 0x5: // Instruction: JMS
-                        PC3 = PC2;
-                        PC2 = PC1;
-                        PC1 = PC + 2;
+                        STACK <<= 12;
+                        STACK += PC + 2;
                         PC = (OPA << 8) + programRom->read(PC + 1);
                         cycles -= 2;
                         break;
@@ -311,9 +311,8 @@ public:
                         break;
                     case 0xC: // Instruction: BBL
                         ACC = OPA;
-                        PC = PC1;
-                        PC1 = PC2;
-                        PC2 = PC3;
+                        PC = STACK;
+                        STACK >>= 12;
                         cycles--;
                         break;
                     case 0x0D: // Instruction: LDM
@@ -487,7 +486,7 @@ public:
 public:
     CPU()
     {
-        C = ACC = OPA = OPR = PC = PC1 = PC2 = PC3 = CM = TEST = 0;
+        C = ACC = OPA = OPR = PC = STACK = CM = TEST = 0;
         for (auto & ram : ramBanks) {
             ram = new RAM();
         }
@@ -502,26 +501,8 @@ public:
 
 };
 
-
-int sizeOfFile(char* path) {
-    std::ifstream in_file(path, std::ios::binary);
-    in_file.seekg(0, std::ios::end);
-    return in_file.tellg();
-}
-
-void loadProgram(char* path, word* characters) {
-    std::ifstream file(path, std::ios::in | std::ios::binary);
-    file.read((char*) characters, sizeOfFile(path));
-    file.close();
-}
-
 int main() {
-    word programMemArray[256];
-    for (word & i : programMemArray) {
-        i = 0;
-    }
-    loadProgram("C:\\Users\\elias\\CLionProjects\\Intel_4004_Emulator\\prime_generator.bin", programMemArray);
-    auto* programMemory = new ROM(programMemArray);
+    auto* programMemory = new ROM("C:\\Users\\elias\\CLionProjects\\Intel_4004_Emulator\\prime_generator.bin");
     auto* cpu = new CPU(programMemory);
     cpu->runProgram(50000000, 0, 0);
 
