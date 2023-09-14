@@ -1,47 +1,47 @@
             JUN START
 
-INC_P1,     LDM 2
-            XCH R2
-            ADD 2
-            XCH R2
-            JCN 0b1010 NOCARRY1
-            INC R3
-NOCARRY1,   BBL 0
-
-INC_P2,     ISZ R4 NOCARRY2
-            INC R5
+INC_P2,     ISZ R5 NOCARRY2
+            INC R4
 NOCARRY2,   BBL 0
 
-INC_P3,     ISZ R6 NOCARRY3
-            INC R5
+INC_P3,     ISZ R7 NOCARRY3
+            INC R6
 NOCARRY3,   BBL 0
 
-LOAD_P0,    LD  R1
-            SRC P0
-            RDM
+
+INC_P0,     LDM 2
+            ADD R1
+            XCH R1
+            JCN 0b1010 NOCARRY0
+            INC R0
+NOCARRY0,   BBL 0
+
+SAVE_P0,    LD  R0
+            SRC P2
+            WRM
             JMS INC_P2
             LD  R1
-            SRC P0
-            RDM
+            SRC P2
+            WRM
             JMS INC_P2
             BBL 0
 
-SAVE_P1,    LD  R3
-            SRC P3
-            WRM
-            JMS INC_P3
-            LD  R2
-            SRC P3
-            WRM
-            JMS INC_P3
-            BBL 0
+LOAD_P1,    SRC P3
+			RDM
+			XCH R2
+			JMS INC_P3
+			SRC P3
+			RDM
+			XCH R3
+			JMS INC_P3
+			BBL 0
 
-START,      FIM P0 0 ; comp prime
-            FIM P1 2 ; prime
-            FIM P2 0 ; load address
-            FIM P3 0 ; save address
-TEST,       JMS SAVE_P1
-            JMS INC_P1
+START,      FIM P0 2 ; current number
+            FIM P1 0 ; check-prime
+            FIM P2 0 ; save address
+            FIM P3 0 ; load address
+TEST,       JMS SAVE_P0
+            JMS INC_P0
             JUN TEST
 
 STOP,       JUN STOP

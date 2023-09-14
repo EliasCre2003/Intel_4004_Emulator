@@ -3,6 +3,7 @@
   <component name="Black">
     <option name="executionMode" value="BINARY" />
     <option name="pathToExecutable" value="C:\Users\elias\AppData\Local\Programs\Python\Python310\Scripts\black.exe" />
+    <option name="sdkName" value="Python 3.10" />
   </component>
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
 </project>

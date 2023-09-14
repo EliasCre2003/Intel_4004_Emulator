@@ -263,7 +263,7 @@ def trim(tokens: list[str]) -> list[str]:
 
 
 def main():
-    with open("prime_generator.txt", "r") as f:
+    with open("fib_nums.txt", "r") as f:
         lines = f.readlines()
     for line in lines:
         if not add_label(line):
@@ -274,7 +274,7 @@ def main():
             print("Error: Invalid line")
             break
     print(data)
-    with open("prime_generator.bin", "wb") as f:
+    with open("fib_nums.bin", "wb") as f:
         f.write(bytearray(data))
 
 

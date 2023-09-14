@@ -1,0 +1,75 @@
+			JUN START
+
+INC_P1,     ISZ R3 NOCARRY1
+            INC R2
+NOCARRY1,   BBL 0
+
+ADD_P2,		ADD R5
+            XCH R5
+            JCN 0b1010 NO_C_ADD2
+            INC R4
+NO_C_ADD2,  BBL 0
+
+SUB_P2,		XCH R5
+			SUB R5
+			XCH R5
+			JCN 0b1010 NO_C_SUB2
+			LDM 1
+			XCH R4
+			SUB R4
+			XCH R4
+NO_C_SUB2,	BBL 0
+
+SAVE_N,		LD  R0
+			SRC P1
+			WRM
+			JMS INC_P1
+			LD  R1
+			SRC P1
+			WRM
+			JMS INC_P1
+			BBL 0
+
+FIB,		FIM R6R7 0
+			SRC P2
+			RDM
+			XCH R7
+			LDM 2
+			JMS ADD_P2
+			SRC P2
+            RDM
+            ADD R7
+            XCH R1
+            FIM R6R7 0
+			JCN 0b1010 NO_C_FIB
+			FIM R6R7 1
+NO_C_FIB,   LDM 3
+			JMS SUB_P2
+			SRC P2
+			RDM
+			XCH R6
+			LDM 2
+			JMS ADD_P2
+			SRC P2
+			RDM
+			ADD R6
+			JCN 0b0010 STOP
+			ADD R7
+			JCN 0b0010 STOP
+			XCH R0
+			LDM 1
+			JMS ADD_P2
+			BBL 0
+
+START,		FIM P0 0 ; current number
+			FIM P1 0 ; save address
+			FIM P2 1 ; load address
+			FIM R6R7 0 ; temp
+			JMS SAVE_N
+			FIM P0 1
+			JMS SAVE_N
+LOOP,		JMS FIB
+			JMS SAVE_N
+			JUN LOOP
+
+STOP,       JUN STOP

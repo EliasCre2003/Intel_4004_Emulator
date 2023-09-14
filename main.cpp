@@ -148,7 +148,7 @@ class CPU {
     uint32 reg : 4;
     uint32 regPair : 3;
     uint32 address12 : 12;
-    uint16 address8 : 8;
+    word address8 : 8;
 
 
 public:
@@ -192,8 +192,8 @@ public:
                     case 0x3:
                         regPair = OPA >> 1;
                         if (OPA % 2 == 0) { // Instruction: FIN
-                            address12 = PC & 0xF00;
-                            registerPairs[regPair] = programRom->read(address12 + registerPairs[0]);
+                            address12 = ((PC + 1) & 0xF00) + registerPairs[0];
+                            registerPairs[regPair] = programRom->read(address12);
                             PC++;
                         } else { // Instruction: JIN
                             PC = registerPairs[regPair];
@@ -205,13 +205,13 @@ public:
                         break;
                     case 0x5: // Instruction: JMS
                         STACK <<= 12;
-                        STACK += PC + 2;
+                        STACK |= PC + 2;
                         PC = (OPA << 8) + programRom->read(PC + 1);
                         cycles -= 2;
                         break;
                     case 0x6: // Instruction: INC
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 1) {
+                        if (OPA % 2 == 0) {
                             reg = registerPairs[regPair] >> 4;
                             reg++;
                             registerPairs[regPair] &= 0x0F;
@@ -227,7 +227,7 @@ public:
                         break;
                     case 0x7: // Instruction: ISZ
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 1) {
+                        if (OPA % 2 == 0) {
                             reg = registerPairs[regPair] >> 4;
                         } else {
                             reg = registerPairs[regPair];
@@ -238,7 +238,7 @@ public:
                         } else {
                             PC = programRom->read(PC + 1);
                         }
-                        if (OPA % 2 == 1) {
+                        if (OPA % 2 == 0) {
                             registerPairs[regPair] &= 0x0F;
                             registerPairs[regPair] += reg << 4;
                         } else {
@@ -249,7 +249,7 @@ public:
                         break;
                     case 0x8: // Instruction: ADD
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 1) {
+                        if (OPA % 2 == 0) {
                             reg = registerPairs[regPair] >> 4;
                         } else {
                             reg = registerPairs[regPair];
@@ -265,16 +265,17 @@ public:
                         break;
                     case 0x9: // Instruction: SUB
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 1) {
-                            address8 = ~registerPairs[regPair] >> 4;
+                        if (OPA % 2 == 0) {
+                            reg = registerPairs[regPair] >> 4;
                         } else {
-                            address8 = ~registerPairs[regPair];
+                            reg = registerPairs[regPair] & 0x0F;
                         }
-                        address8 += ACC + C;
+                        address8 = ACC;
+                        address8 -= reg;
                         if (address8 >= 16) {
-                            C = 0;
-                        } else {
                             C = 1;
+                        } else {
+                            C = 0;
                         }
                         ACC = address8;
                         PC++;
@@ -282,7 +283,7 @@ public:
                         break;
                     case 0xA: // Instruction: LD
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 1) {
+                        if (OPA % 2 == 0) {
                             ACC = registerPairs[regPair] >> 4;
                         } else {
                             ACC = registerPairs[regPair];
@@ -293,13 +294,13 @@ public:
                     case 0xB: // Instruction: XCH
                         address8 = ACC; //tempACC
                         regPair = OPA >> 1;
-                        if (OPA % 2 == 1) {
+                        if (OPA % 2 == 0) {
                             reg = registerPairs[regPair] >> 4;
                         } else {
                             reg = registerPairs[regPair];
                         }
                         ACC = reg;
-                        if (OPA % 2 == 1) {
+                        if (OPA % 2 == 0) {
                             registerPairs[regPair] &= 0x0F;
                             registerPairs[regPair] += address8 << 4;
                         } else {
@@ -486,7 +487,7 @@ public:
 public:
     CPU()
     {
-        C = ACC = OPA = OPR = PC = STACK = CM = TEST = 0;
+        C = C0 = ACC = OPA = OPR = PC = STACK = CM = TEST = 0;
         for (auto & ram : ramBanks) {
             ram = new RAM();
         }
@@ -502,9 +503,9 @@ public:
 };
 
 int main() {
-    auto* programMemory = new ROM("C:\\Users\\elias\\CLionProjects\\Intel_4004_Emulator\\prime_generator.bin");
+    auto* programMemory = new ROM("C:\\Users\\elias\\CLionProjects\\Intel_4004_Emulator\\fib_nums.bin");
     auto* cpu = new CPU(programMemory);
-    cpu->runProgram(50000000, 0, 0);
+    cpu->runProgram(50000, 0, 0);
 
     return 0;
 }
