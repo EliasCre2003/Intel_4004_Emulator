@@ -1,3 +1,0 @@
-C:/Users/elias/CLionProjects/Intel_4004_Emulator/cmake-build-debug/CMakeFiles/Intel_4004_Emulator.dir
-C:/Users/elias/CLionProjects/Intel_4004_Emulator/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/elias/CLionProjects/Intel_4004_Emulator/cmake-build-debug/CMakeFiles/rebuild_cache.dir
