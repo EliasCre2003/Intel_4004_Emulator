@@ -391,84 +391,60 @@ void DCL(CPU *cpu)
 
 void step(CPU *cpu, bool debug)
 {
-    word instruction = read(cpu->programRom, cpu->PC);
-    cpu->OPR = (instruction >> 4) & 0x0F;
-    cpu->OPA = instruction & 0x0F;
+    cpu->lastInstruction = read(cpu->programRom, cpu->PC);
+    cpu->OPR = (cpu->lastInstruction >> 4) & 0x0F;
+    cpu->OPA = cpu->lastInstruction & 0x0F;
     if (cpu->OPR <= 0xD)
     {
         switch (cpu->OPR)
         {
         case 0x0:
             NOP(cpu);
-            cpu->lastInstruction = "NOP";
             break;
         case 0x1:
             JCN(cpu);
-            cpu->lastInstruction = "JCN";
             break;
         case 0x2:
             if (cpu->OPA % 2 == 0)
-            {
                 FIM(cpu);
-                cpu->lastInstruction = "FIM";
-            }
             else
-            {
                 SRC(cpu);
-                cpu->lastInstruction = "SRC";
-            }
             break;
         case 0x3:
             if (cpu->OPA % 2 == 0)
-            {
                 FIN(cpu);
-                cpu->lastInstruction = "FIN";
-            }
             else
-            {
                 JIN(cpu);
-                cpu->lastInstruction = "JIN";
-            }
             break;
         case 0x4:
             JUN(cpu);
-            cpu->lastInstruction = "JUN";
             break;
         case 0x5:
             JMS(cpu);
-            cpu->lastInstruction = "JMS";
             break;
         case 0x6:
             INC(cpu);
-            cpu->lastInstruction = "INC";
             break;
         case 0x7:
             ISZ(cpu);
-            cpu->lastInstruction = "ISZ";
             break;
         case 0x8:
             ADD(cpu);
-            cpu->lastInstruction = "ADD";
             break;
         case 0x9:
             SUB(cpu);
-            cpu->lastInstruction = "SUB";
             break;
         case 0xA:
             LD(cpu);
-            cpu->lastInstruction = "LD ";
             break;
         case 0xB:
             XCH(cpu);
-            cpu->lastInstruction = "XCH";
             break;
         case 0xC:
             BBL(cpu);
-            cpu->lastInstruction = "BBL";
             break;
         case 0xD:
             LDM(cpu);
-            cpu->lastInstruction = "LDM";
             break;
         default:
             break;
@@ -480,67 +456,51 @@ void step(CPU *cpu, bool debug)
         {
         case 0x0:
             WRM(cpu);
-            cpu->lastInstruction = "WRM";
             break;
         case 0x1:
             WMP(cpu);
-            cpu->lastInstruction = "WMP";
             break;
         case 0x2:
             WRR(cpu);
-            cpu->lastInstruction = "WRR";
             break;
         case 0x3:
             WPM(cpu);
-            cpu->lastInstruction = "WPM";
             break;
         case 0x4:
             WR0(cpu);
-            cpu->lastInstruction = "WR0";
             break;
         case 0x5:
             WR1(cpu);
-            cpu->lastInstruction = "WR1";
             break;
         case 0x6:
             WR2(cpu);
-            cpu->lastInstruction = "WR2";
             break;
         case 0x7:
             WR3(cpu);
-            cpu->lastInstruction = "WR3";
             break;
         case 0x8:
             SBM(cpu);
-            cpu->lastInstruction = "SBM";
             break;
         case 0x9:
             RDM(cpu);
-            cpu->lastInstruction = "RDM";
             break;
         case 0xA:
             RDR(cpu);
-            cpu->lastInstruction = "RDR";
             break;
         case 0xB:
             ADM(cpu);
-            cpu->lastInstruction = "ADM";
             break;
         case 0xC:
             RR0(cpu);
-            cpu->lastInstruction = "RR0";
             break;
         case 0xD:
             RR1(cpu);
-            cpu->lastInstruction = "RR1";
             break;
         case 0xE:
             RR2(cpu);
-            cpu->lastInstruction = "RR2";
             break;
         case 0xF:
             RR3(cpu);
-            cpu->lastInstruction = "RR3";
             break;
         default:
             break;
@@ -552,59 +512,45 @@ void step(CPU *cpu, bool debug)
         {
         case 0x0:
             CLB(cpu);
-            cpu->lastInstruction = "CLB";
             break;
         case 0x1:
             CLC(cpu);
-            cpu->lastInstruction = "CLC";
             break;
         case 0x2:
             IAC(cpu);
-            cpu->lastInstruction = "IAC";
             break;
         case 0x3:
             CMC(cpu);
-            cpu->lastInstruction = "CMC";
             break;
         case 0x4:
             CMA(cpu);
-            cpu->lastInstruction = "CMA";
             break;
         case 0x5:
             RAL(cpu);
-            cpu->lastInstruction = "RAL";
             break;
         case 0x6:
             RAR(cpu);
-            cpu->lastInstruction = "RAR";
             break;
         case 0x7:
             TCC(cpu);
-            cpu->lastInstruction = "TCC";
             break;
         case 0x8:
             DAC(cpu);
-            cpu->lastInstruction = "DAC";
             break;
         case 0x9:
             TCS(cpu);
-            cpu->lastInstruction = "TCS";
             break;
         case 0xA:
             STC(cpu);
-            cpu->lastInstruction = "STC";
             break;
         case 0xB:
             DAA(cpu);
-            cpu->lastInstruction = "DAA";
             break;
         case 0xC:
             KBP(cpu);
-            cpu->lastInstruction = "KBP";
             break;
         case 0xD:
             DCL(cpu);
-            cpu->lastInstruction = "DCL";
             break;
         default:
             break;

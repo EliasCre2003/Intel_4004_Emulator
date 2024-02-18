@@ -1,5 +1,4 @@
-// resetCPU();
-
+// Using wasm32
 
 var memory = new WebAssembly.Memory({
     initial: 256,  // initial size in pages, (1 page = 64 KiB)
@@ -64,6 +63,44 @@ function decodeString(ptr) {
     );
 }
 
+function decodeCPU(ptr) {
+    var bytes = new Uint8Array(memory.buffer, ptr).slice(0, 57);
+    var cpu = {
+        C: bytes[0] & 0b0001,
+        TEST: (bytes[0] & 0b0000_0100) >> 2,
+        ACC: (bytes[0] & 0b0111_1000) >> 3,
+        OPA: ((bytes[0] & 0b1000_0000) >> 7) | ((bytes[1] & 0b0000_0111) << 1),
+        OPR: (bytes[1] & 0b0111_1000) >> 3,
+        PC: ((bytes[1] & 0b1000_0000) >> 7) | (bytes[2] << 1) | ((bytes[3] & 0b0000_0111) << 9),
+        STACK: ((bytes[3] & 0b1111_1000) >> 3) | (bytes[4] << 5) | (bytes[5] << 13) | (bytes[6] << 21) | ((bytes[7] & 0b0111_1111) << 29),
+        registerPairs: [bytes[12], bytes[13], bytes[14], bytes[15], bytes[16], bytes[17], bytes[18], bytes[19]],
+        pProgramRom: bytes[20] | (bytes[21] << 8) | (bytes[22] << 16) | (bytes[23] << 24),
+        pRamBanks: [
+            bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24),
+            bytes[28] | (bytes[29] << 8) | (bytes[30] << 16) | (bytes[31] << 24),
+            bytes[32] | (bytes[33] << 8) | (bytes[34] << 16) | (bytes[35] << 24),
+            bytes[36] | (bytes[37] << 8) | (bytes[38] << 16) | (bytes[39] << 24),
+            bytes[40] | (bytes[41] << 8) | (bytes[42] << 16) | (bytes[43] << 24),
+            bytes[44] | (bytes[45] << 8) | (bytes[46] << 16) | (bytes[47] << 24),
+            bytes[48] | (bytes[49] << 8) | (bytes[50] << 16) | (bytes[51] << 24),
+            bytes[52] | (bytes[53] << 8) | (bytes[54] << 16) | (bytes[55] << 24)
+        ],
+        lastInstruction: bytes[56]
+    }
+    return cpu;
+}
+
+function decodeRAM(ptr) {
+    var bytes = new Uint8Array(memory.buffer, ptr);
+    ram = {
+        memory: bytes.slice(0, 128),
+        status: bytes.slice(128, 160),
+        outputs: [bytes[160], bytes[161]]
+    }
+    return ram;
+
+}
+
 
 function initROM() {
     var arr = [
@@ -74,17 +111,15 @@ function initROM() {
         0x5d, 0x87, 0x12, 0x5d, 0xb0, 0xd1, 0x50, 0x06, 0xc0, 0x20, 0x00, 0x22, 0x00, 0x24, 0x01, 0x26,
         0x00, 0x50, 0x16, 0x20, 0x01, 0x50, 0x16, 0x50, 0x21, 0x50, 0x16, 0x40, 0x57, 0x40, 0x5d];
     var ptr = encodeArray(arr, arr.length, 1);
-    var result = exports.initROM(ptr, arr.length);
-    // exports.wasmFree(ptr);
-
-    // document.querySelector("#ret")
-    //     .innerHTML += `${result}<br>`;
+    exports.initROM(ptr, arr.length);
+    exports.wasmFree(ptr);
 }
 
 function stepCPU(steps) {
     var ptr = exports.stepCPU(steps);
 
     var result = decodeString(ptr);
+    console.log(result);
     if (result.length <= 3) {
         result += "&nbsp;[&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]"
     }
@@ -119,3 +154,51 @@ function sleep(ms) {
 //     resetCPU();
 //     console.log("CPU reset");
 // });
+
+function getOpcode(instruction) {
+    const OPR = (instruction >> 4) & 0x0F;
+    const OPA = instruction & 0x0F;
+    if (OPR <= 0xD) {
+        switch (OPR) {
+            case 0x0: return "NOP";
+            case 0x1: return "JCN";
+            case 0x2: 
+                if (OPA % 2 === 0) return "FIM";
+                else return "SRC";
+            case 0x3: 
+                if (OPA % 2 === 0) return "FIN";
+                else return "JIN";
+            case 0x4: return "JUN";
+            case 0x5: return "JMS";
+            case 0x6: return "INC";
+            case 0x7: return "ISZ";
+            case 0x8: return "ADD";
+            case 0x9: return "SUB";
+            case 0xA: return "LD ";
+            case 0xB: return "XCH";
+            case 0xC: return "BBL";
+            case 0xD: return "LDM";
+        }
+    }
+    if (OPR === 0xE) {
+        switch (OPA) {
+            case 0x0: return "WRM";
+            case 0x1: return "WMP";
+            case 0x2: return "WRR";
+            case 0x3: return "WPM";
+            case 0x4: return "WR0";
+            case 0x5: return "WR1";
+            case 0x6: return "WR2";
+            case 0x7: return "WR3";
+            case 0x8: return "SBM";
+            case 0x9: return "RDM";
+            case 0xA: return "RDR";
+            case 0xB: return "ADM";
+            case 0xC: return "RR0";
+            case 0xD: return "RR1";
+            case 0xE: return "RR2";
+            case 0xF: return "RR3";
+        }
+    }
+    
+}
