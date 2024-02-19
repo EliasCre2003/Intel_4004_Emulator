@@ -1,5 +1,8 @@
 // Using wasm32
 
+var pCPU;
+var pROM;
+
 var memory = new WebAssembly.Memory({
     initial: 256,  // initial size in pages, (1 page = 64 KiB)
     maximum: 512   // maximum size in pages
@@ -64,7 +67,7 @@ function decodeString(ptr) {
 }
 
 function decodeCPU(ptr) {
-    var bytes = new Uint8Array(memory.buffer, ptr).slice(0, 57);
+    var bytes = new Uint8Array(memory.buffer, ptr).slice(0, 58);
     var cpu = {
         C: bytes[0] & 0b0001,
         TEST: (bytes[0] & 0b0000_0100) >> 2,
@@ -74,7 +77,6 @@ function decodeCPU(ptr) {
         PC: ((bytes[1] & 0b1000_0000) >> 7) | (bytes[2] << 1) | ((bytes[3] & 0b0000_0111) << 9),
         STACK: ((bytes[3] & 0b1111_1000) >> 3) | (bytes[4] << 5) | (bytes[5] << 13) | (bytes[6] << 21) | ((bytes[7] & 0b0111_1111) << 29),
         registerPairs: [bytes[12], bytes[13], bytes[14], bytes[15], bytes[16], bytes[17], bytes[18], bytes[19]],
-        pProgramRom: bytes[20] | (bytes[21] << 8) | (bytes[22] << 16) | (bytes[23] << 24),
         pRamBanks: [
             bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24),
             bytes[28] | (bytes[29] << 8) | (bytes[30] << 16) | (bytes[31] << 24),
@@ -85,8 +87,10 @@ function decodeCPU(ptr) {
             bytes[48] | (bytes[49] << 8) | (bytes[50] << 16) | (bytes[51] << 24),
             bytes[52] | (bytes[53] << 8) | (bytes[54] << 16) | (bytes[55] << 24)
         ],
-        lastInstruction: bytes[56]
+        lastInstruction: bytes[56],
+        lastData: bytes[57]
     }
+    console.log(cpu);
     return cpu;
 }
 
@@ -98,7 +102,15 @@ function decodeRAM(ptr) {
         outputs: [bytes[160], bytes[161]]
     }
     return ram;
+}
 
+function decodeROM(ptr) {
+    var bytes = new Uint8Array(memory.buffer, ptr).slice(0, 4097);
+    var rom = {
+        memory: bytes.slice(0, 4096),
+        ioPorts: bytes[4096] & 0b0000_1111,
+    }
+    return rom;
 }
 
 
@@ -111,31 +123,61 @@ function initROM() {
         0x5d, 0x87, 0x12, 0x5d, 0xb0, 0xd1, 0x50, 0x06, 0xc0, 0x20, 0x00, 0x22, 0x00, 0x24, 0x01, 0x26,
         0x00, 0x50, 0x16, 0x20, 0x01, 0x50, 0x16, 0x50, 0x21, 0x50, 0x16, 0x40, 0x57, 0x40, 0x5d];
     var ptr = encodeArray(arr, arr.length, 1);
-    exports.initROM(ptr, arr.length);
+    pROM = exports.initROM(ptr, arr.length);
     exports.wasmFree(ptr);
 }
 
 function stepCPU(steps) {
-    var ptr = exports.stepCPU(steps);
+    exports.stepCPU(steps);
 
-    var result = decodeString(ptr);
-    console.log(result);
-    if (result.length <= 3) {
-        result += "&nbsp;[&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]"
-    }
+    var cpu = decodeCPU(pCPU);
+    var result = getInstruction(getOpcode(cpu.lastInstruction), cpu);
 
+    // Update CPU view
     const opcode = document.getElementById("opcode");
     opcode.innerHTML = result;
+
+    const acc = document.getElementById("acc");
+    const accText = `0x${cpu.ACC.toString(16).toUpperCase()} 0b${cpu.ACC.toString(2).padStart(4, "0")} ${cpu.ACC.toString().padStart(2, "0")}`;
+    acc.innerHTML = accText;
+
+    const pc = document.getElementById("pc");
+    const pcText = `0x${cpu.PC.toString(16).toUpperCase().padStart(3, "0")}
+                     0x${((cpu.STACK) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}
+                     0x${((cpu.STACK >> 12) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}
+                     0x${((cpu.STACK >> 24) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}`;
+    pc.innerHTML = pcText;
+
+    for (var i = 0; i < 8; i++) {
+        var reg = document.getElementById(`r${2*i}`);
+        reg.innerHTML = `${(cpu.registerPairs[i] & 0xF).toString(16).toUpperCase()}`;
+        reg = document.getElementById(`r${2*i+1}`);
+        reg.innerHTML = `${((cpu.registerPairs[i] >> 4) & 0xF).toString(16)}`;
+    }
+
+
+    updateRomView();
+
         
 }
 
-function resetCPU() {
-    initROM();
-    exports.resetCPU();
+function updateRomView() {
+    var rom = decodeROM(pROM);
+    var romData = rom.memory;
+    var hex = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
+    for (var i = 0; i < 16; i++) {
+        for (var j = 0; j < 16; j++) {
+            var id = "rom" + hex[i] + hex[j];
+            var cell = document.getElementById(id);
+            var byteText = romData[i * 16 + j].toString(16).toUpperCase().padStart(2, "0");
+            cell.innerHTML = byteText;
+        }
+    }
 }
 
 function initEmulator() {
-    exports.mainInit();
+    initROM();
+    pCPU = exports.resetCPU();
 }
 
 
@@ -180,7 +222,7 @@ function getOpcode(instruction) {
             case 0xD: return "LDM";
         }
     }
-    if (OPR === 0xE) {
+    else if (OPR === 0xE) {
         switch (OPA) {
             case 0x0: return "WRM";
             case 0x1: return "WMP";
@@ -200,5 +242,78 @@ function getOpcode(instruction) {
             case 0xF: return "RR3";
         }
     }
+    else if (OPR === 0xF) {
+        switch (OPA) {
+            case 0x0: return "CLB";
+            case 0x1: return "CLC";
+            case 0x2: return "IAC";
+            case 0x3: return "CMC";
+            case 0x4: return "CMA";
+            case 0x5: return "RAL";
+            case 0x6: return "RAR";
+            case 0x7: return "TCC";
+            case 0x8: return "DAC";
+            case 0x9: return "TCS";
+            case 0xA: return "STC";
+            case 0xB: return "DAA";
+            case 0xC: return "KBP";
+            case 0xD: return "DCL";
+            default: return "???";
+        }
+    }
     
+}
+
+function getInstruction(opcode, cpu) {
+    var data;
+    switch (opcode) {
+        case "JCN": 
+            data = `0b${cpu.OPA.toString(2).toUpperCase().padStart(4, "0")} ${cpu.lastData.toString(16).toUpperCase().padStart(2, "0")}`;
+            break;
+        case "FIM":
+            data = `P${cpu.OPA >> 1} 0x${cpu.lastData.toString(16).toUpperCase().padStart(2, "0")}`;
+            break;
+        case "SRC":
+            data = `P${cpu.OPA >> 1}`;
+            break;
+        case "FIN":
+            data = `P${cpu.OPA >> 1}`;
+            break;
+        case "JIN":
+            data = `P${cpu.OPA >> 1}`;
+            break;
+        case "JUN":
+            data = `0x${((cpu.OPA << 8) | cpu.lastData).toString(16).toUpperCase().padStart(3, "0")}`;
+            break;
+        case "JMS":
+            data = `0x${((cpu.OPA << 8) | cpu.lastData).toString(16).toUpperCase().padStart(3, "0")}`;
+            break;
+        case "INC":
+            data = `R${cpu.OPA}`;
+            break;
+        case "ISZ":
+            data = `R${cpu.OPA} 0x${cpu.lastData.toString(16).toUpperCase().padStart(2, "0")}`;
+            break;
+        case "ADD":
+            data = `R${cpu.OPA}`;
+            break;
+        case "SUB":
+            data = `R${cpu.OPA}`;
+            break;
+        case "LD ":
+            data = `R${cpu.OPA}`;
+            break;
+        case "XCH":
+            data = `R${cpu.OPA}`;
+            break;
+        case "BBL":
+            data = `0x${cpu.OPA.toString(16).toUpperCase()}`;
+            break;
+        case "LDM":
+            data = `0x${cpu.OPA.toString(16).toUpperCase()}`;
+            break;
+        default:
+            data = "";
+    }
+    return `${opcode}&nbsp;${data}`;
 }

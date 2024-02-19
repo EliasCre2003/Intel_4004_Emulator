@@ -39,19 +39,21 @@ void stepCPU(int steps)
 }
 
 EMSCRIPTEN_KEEPALIVE
-int initROM(word *program, int length)
+ROM *initROM(word *program, int length)
 {
     // initializeCPU(cpu, rom, 0, 0);
     if (rom == NULL)
-        free(rom)
-            rom = (ROM *)malloc(sizeof(ROM));
-    return initializeROMfromArray(rom, program, length);
+        free(rom);
+    rom = (ROM *)malloc(sizeof(ROM));
+    initializeROMfromArray(rom, program, length);
+    return rom;
 }
 
 EMSCRIPTEN_KEEPALIVE
-void resetCPU()
+CPU *resetCPU()
 {
     if (cpu == NULL)
         cpu = (CPU *)malloc(sizeof(CPU));
     initializeCPU(cpu, rom, 0, 0);
+    return cpu;
 }

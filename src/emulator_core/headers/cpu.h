@@ -29,7 +29,7 @@ typedef struct
     word registerPairs[CPU_REGISTER_PAIRS_N];
     ROM *programRom;
     RAM *ramBanks[CPU_RAM_BANKS_N];
-    word lastInstruction;
+    word previousData[2];
     // char *lastInstruction;
 } CPU;
 

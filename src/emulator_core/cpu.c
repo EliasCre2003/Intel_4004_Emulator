@@ -391,9 +391,10 @@ void DCL(CPU *cpu)
 
 void step(CPU *cpu, bool debug)
 {
-    cpu->lastInstruction = read(cpu->programRom, cpu->PC);
-    cpu->OPR = (cpu->lastInstruction >> 4) & 0x0F;
-    cpu->OPA = cpu->lastInstruction & 0x0F;
+    cpu->previousData[0] = read(cpu->programRom, cpu->PC);
+    cpu->previousData[1] = read(cpu->programRom, cpu->PC + 1);
+    cpu->OPR = (cpu->previousData[0] >> 4) & 0x0F;
+    cpu->OPA = cpu->previousData[0] & 0x0F;
     if (cpu->OPR <= 0xD)
     {
         switch (cpu->OPR)
@@ -557,7 +558,7 @@ void step(CPU *cpu, bool debug)
         }
     }
     // if (debug)
-    // printf("Instruction: %s (0x%02X), OPR: (0x%02X), OPA: (0x%02X)\n", cpu->lastInstruction, instruction & 0xFF, cpu->OPR, cpu->OPA);
+    // printf("Instruction: %s (0x%02X), OPR: (0x%02X), OPA: (0x%02X)\n", cpu->prevData, instruction & 0xFF, cpu->OPR, cpu->OPA);
     // printf("Instruction: (0x%02X), OPR: (0x%02X), OPA: (0x%02X)\n", instruction & 0xFF, cpu->OPR, cpu->OPA);
 }
 
