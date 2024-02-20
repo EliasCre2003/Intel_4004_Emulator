@@ -12,8 +12,6 @@
 CPU *cpu; // global CPU
 ROM *rom; // global ROM
 
-int test = 1;
-
 int main()
 {
     return 0;
@@ -34,6 +32,7 @@ EMSCRIPTEN_KEEPALIVE
 void stepCPU(int steps)
 {
     execute(cpu, steps, true);
+    return cpu->programRom;
     // wack(cpu);
     // return cpu->lastInstruction;
 }

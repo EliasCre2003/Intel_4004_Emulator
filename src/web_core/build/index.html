@@ -7,28 +7,6 @@
     <link rel="stylesheet" href="css/style.css">
 
     <style>
-      /* body {
-        font-family: monospace;
-        background-color: rgb(0, 159, 207);
-      }
-       */
-/* 
-      #right_side {
-        position: absolute;
-        left: 780px;
-        bottom: 314px;
-      } */
-      
-      /* .rect {
-        background-color: rgb(0, 80, 172);
-        height: 100%;
-        font-size: 18px;
-        border-style: solid;
-        border-width: 2.5px;
-        border-radius: 10px;
-        display: flex;
-      } */
-
       #status_rect {
         width: 100%;
       }
@@ -59,7 +37,12 @@
     </style>
   </head>
   <body class="font-mono bg-blue-800">
-    <script src="emulator_comunication.js"></script>
+    <script src="emulator_comunication.js">
+      var Module = { onRuntimeInitialized: function() {
+        _foo();
+        _bar();
+      } };
+    </script>
         
     <b class="text-3xl flex justify-center">Intel 4004 Emulator</b>
     <div class="flex justify-center">
@@ -176,331 +159,351 @@
         <b class="text-xl p-2">CPU Program ROM:</b>
         <div class="bg-blue-500 h-100% width-100% text-lg flex border-solid border-[2.5px] rounded-lg border-black">
           <div id="memory_view_wrapper">
-          <table id="rom_view" class="bg-blue-800 border-solid border-black border-2 rounded-lg grid">
-            <tr class="leading-4">
-              <td class="address">&nbsp;</td>
-              <td class="address">00</td>
-              <td class="address">01</td>
-              <td class="address">02</td>
-              <td class="address">03</td>
-              <td class="address">04</td>
-              <td class="address">05</td>
-              <td class="address">06</td>
-              <td class="address">07</td>
-              <td class="address">08</td>
-              <td class="address">09</td>
-              <td class="address">0A</td>
-              <td class="address">0B</td>
-              <td class="address">0C</td>
-              <td class="address">0D</td>
-              <td class="address">0E</td>
-              <td class="address">0F &nbsp;</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">00</td>
-              <td id="rom00" class="byte">00</td>
-              <td id="rom01" class="byte">00</td>
-              <td id="rom02" class="byte">00</td>
-              <td id="rom03" class="byte">00</td>
-              <td id="rom04" class="byte">00</td>
-              <td id="rom05" class="byte">00</td>
-              <td id="rom06" class="byte">00</td>
-              <td id="rom07" class="byte">00</td>
-              <td id="rom08" class="byte">00</td>
-              <td id="rom09" class="byte">00</td>
-              <td id="rom0A" class="byte">00</td>
-              <td id="rom0B" class="byte">00</td>
-              <td id="rom0C" class="byte">00</td>
-              <td id="rom0D" class="byte">00</td>
-              <td id="rom0E" class="byte">00</td>
-              <td id="rom0F" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">10</td>
-              <td id="rom10" class="byte">00</td>
-              <td id="rom11" class="byte">00</td>
-              <td id="rom12" class="byte">00</td>
-              <td id="rom13" class="byte">00</td>
-              <td id="rom14" class="byte">00</td>
-              <td id="rom15" class="byte">00</td>
-              <td id="rom16" class="byte">00</td>
-              <td id="rom17" class="byte">00</td>
-              <td id="rom18" class="byte">00</td>
-              <td id="rom19" class="byte">00</td>
-              <td id="rom1A" class="byte">00</td>
-              <td id="rom1B" class="byte">00</td>
-              <td id="rom1C" class="byte">00</td>
-              <td id="rom1D" class="byte">00</td>
-              <td id="rom1E" class="byte">00</td>
-              <td id="rom1F" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">20</td>
-              <td id="rom20" class="byte">00</td>
-              <td id="rom21" class="byte">00</td>
-              <td id="rom22" class="byte">00</td>
-              <td id="rom23" class="byte">00</td>
-              <td id="rom24" class="byte">00</td>
-              <td id="rom25" class="byte">00</td>
-              <td id="rom26" class="byte">00</td>
-              <td id="rom27" class="byte">00</td>
-              <td id="rom28" class="byte">00</td>
-              <td id="rom29" class="byte">00</td>
-              <td id="rom2A" class="byte">00</td>
-              <td id="rom2B" class="byte">00</td>
-              <td id="rom2C" class="byte">00</td>
-              <td id="rom2D" class="byte">00</td>
-              <td id="rom2E" class="byte">00</td>
-              <td id="rom2F" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">30</td>
-              <td id="rom30" class="byte">00</td>
-              <td id="rom31" class="byte">00</td>
-              <td id="rom32" class="byte">00</td>
-              <td id="rom33" class="byte">00</td>
-              <td id="rom34" class="byte">00</td>
-              <td id="rom35" class="byte">00</td>
-              <td id="rom36" class="byte">00</td>
-              <td id="rom37" class="byte">00</td>
-              <td id="rom38" class="byte">00</td>
-              <td id="rom39" class="byte">00</td>
-              <td id="rom3A" class="byte">00</td>
-              <td id="rom3B" class="byte">00</td>
-              <td id="rom3C" class="byte">00</td>
-              <td id="rom3D" class="byte">00</td>
-              <td id="rom3E" class="byte">00</td>
-              <td id="rom3F" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">40</td>
-              <td id="rom40" class="byte">00</td>
-              <td id="rom41" class="byte">00</td>
-              <td id="rom42" class="byte">00</td>
-              <td id="rom43" class="byte">00</td>
-              <td id="rom44" class="byte">00</td>
-              <td id="rom45" class="byte">00</td>
-              <td id="rom46" class="byte">00</td>
-              <td id="rom47" class="byte">00</td>
-              <td id="rom48" class="byte">00</td>
-              <td id="rom49" class="byte">00</td>
-              <td id="rom4A" class="byte">00</td>
-              <td id="rom4B" class="byte">00</td>
-              <td id="rom4C" class="byte">00</td>
-              <td id="rom4D" class="byte">00</td>
-              <td id="rom4E" class="byte">00</td>
-              <td id="rom4F" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">50</td>
-              <td id="rom50" class="byte">00</td>
-              <td id="rom51" class="byte">00</td>
-              <td id="rom52" class="byte">00</td>
-              <td id="rom53" class="byte">00</td>
-              <td id="rom54" class="byte">00</td>
-              <td id="rom55" class="byte">00</td>
-              <td id="rom56" class="byte">00</td>
-              <td id="rom57" class="byte">00</td>
-              <td id="rom58" class="byte">00</td>
-              <td id="rom59" class="byte">00</td>
-              <td id="rom5A" class="byte">00</td>
-              <td id="rom5B" class="byte">00</td>
-              <td id="rom5C" class="byte">00</td>
-              <td id="rom5D" class="byte">00</td>
-              <td id="rom5E" class="byte">00</td>
-              <td id="rom5F" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">60</td>
-              <td id="rom60" class="byte">00</td>
-              <td id="rom61" class="byte">00</td>
-              <td id="rom62" class="byte">00</td>
-              <td id="rom63" class="byte">00</td>
-              <td id="rom64" class="byte">00</td>
-              <td id="rom65" class="byte">00</td>
-              <td id="rom66" class="byte">00</td>
-              <td id="rom67" class="byte">00</td>
-              <td id="rom68" class="byte">00</td>
-              <td id="rom69" class="byte">00</td>
-              <td id="rom6A" class="byte">00</td>
-              <td id="rom6B" class="byte">00</td>
-              <td id="rom6C" class="byte">00</td>
-              <td id="rom6D" class="byte">00</td>
-              <td id="rom6E" class="byte">00</td>
-              <td id="rom6F" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">70</td>
-              <td id="rom70" class="byte">00</td>
-              <td id="rom71" class="byte">00</td>
-              <td id="rom72" class="byte">00</td>
-              <td id="rom73" class="byte">00</td>
-              <td id="rom74" class="byte">00</td>
-              <td id="rom75" class="byte">00</td>
-              <td id="rom76" class="byte">00</td>
-              <td id="rom77" class="byte">00</td>
-              <td id="rom78" class="byte">00</td>
-              <td id="rom79" class="byte">00</td>
-              <td id="rom7A" class="byte">00</td>
-              <td id="rom7B" class="byte">00</td>
-              <td id="rom7C" class="byte">00</td>
-              <td id="rom7D" class="byte">00</td>
-              <td id="rom7E" class="byte">00</td>
-              <td id="rom7F" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">80</td>
-              <td id="rom80" class="byte">00</td>
-              <td id="rom81" class="byte">00</td>
-              <td id="rom82" class="byte">00</td>
-              <td id="rom83" class="byte">00</td>
-              <td id="rom84" class="byte">00</td>
-              <td id="rom85" class="byte">00</td>
-              <td id="rom86" class="byte">00</td>
-              <td id="rom87" class="byte">00</td>
-              <td id="rom88" class="byte">00</td>
-              <td id="rom89" class="byte">00</td>
-              <td id="rom8A" class="byte">00</td>
-              <td id="rom8B" class="byte">00</td>
-              <td id="rom8C" class="byte">00</td>
-              <td id="rom8D" class="byte">00</td>
-              <td id="rom8E" class="byte">00</td>
-              <td id="rom8F" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">90</td>
-              <td id="rom90" class="byte">00</td>
-              <td id="rom91" class="byte">00</td>
-              <td id="rom92" class="byte">00</td>
-              <td id="rom93" class="byte">00</td>
-              <td id="rom94" class="byte">00</td>
-              <td id="rom95" class="byte">00</td>
-              <td id="rom96" class="byte">00</td>
-              <td id="rom97" class="byte">00</td>
-              <td id="rom98" class="byte">00</td>
-              <td id="rom99" class="byte">00</td>
-              <td id="rom9A" class="byte">00</td>
-              <td id="rom9B" class="byte">00</td>
-              <td id="rom9C" class="byte">00</td>
-              <td id="rom9D" class="byte">00</td>
-              <td id="rom9E" class="byte">00</td>
-              <td id="rom9F" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">A0</td>
-              <td id="romA0" class="byte">00</td>
-              <td id="romA1" class="byte">00</td>
-              <td id="romA2" class="byte">00</td>
-              <td id="romA3" class="byte">00</td>
-              <td id="romA4" class="byte">00</td>
-              <td id="romA5" class="byte">00</td>
-              <td id="romA6" class="byte">00</td>
-              <td id="romA7" class="byte">00</td>
-              <td id="romA8" class="byte">00</td>
-              <td id="romA9" class="byte">00</td>
-              <td id="romAA" class="byte">00</td>
-              <td id="romAB" class="byte">00</td>
-              <td id="romAC" class="byte">00</td>
-              <td id="romAD" class="byte">00</td>
-              <td id="romAE" class="byte">00</td>
-              <td id="romAF" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">B0</td>
-              <td id="romB0" class="byte">00</td>
-              <td id="romB1" class="byte">00</td>
-              <td id="romB2" class="byte">00</td>
-              <td id="romB3" class="byte">00</td>
-              <td id="romB4" class="byte">00</td>
-              <td id="romB5" class="byte">00</td>
-              <td id="romB6" class="byte">00</td>
-              <td id="romB7" class="byte">00</td>
-              <td id="romB8" class="byte">00</td>
-              <td id="romB9" class="byte">00</td>
-              <td id="romBA" class="byte">00</td>
-              <td id="romBB" class="byte">00</td>
-              <td id="romBC" class="byte">00</td>
-              <td id="romBD" class="byte">00</td>
-              <td id="romBE" class="byte">00</td>
-              <td id="romBF" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">C0</td>
-              <td id="romC0" class="byte">00</td>
-              <td id="romC1" class="byte">00</td>
-              <td id="romC2" class="byte">00</td>
-              <td id="romC3" class="byte">00</td>
-              <td id="romC4" class="byte">00</td>
-              <td id="romC5" class="byte">00</td>
-              <td id="romC6" class="byte">00</td>
-              <td id="romC7" class="byte">00</td>
-              <td id="romC8" class="byte">00</td>
-              <td id="romC9" class="byte">00</td>
-              <td id="romCA" class="byte">00</td>
-              <td id="romCB" class="byte">00</td>
-              <td id="romCC" class="byte">00</td>
-              <td id="romCD" class="byte">00</td>
-              <td id="romCE" class="byte">00</td>
-              <td id="romCF" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">D0</td>
-              <td id="romD0" class="byte">00</td>
-              <td id="romD1" class="byte">00</td>
-              <td id="romD2" class="byte">00</td>
-              <td id="romD3" class="byte">00</td>
-              <td id="romD4" class="byte">00</td>
-              <td id="romD5" class="byte">00</td>
-              <td id="romD6" class="byte">00</td>
-              <td id="romD7" class="byte">00</td>
-              <td id="romD8" class="byte">00</td>
-              <td id="romD9" class="byte">00</td>
-              <td id="romDA" class="byte">00</td>
-              <td id="romDB" class="byte">00</td>
-              <td id="romDC" class="byte">00</td>
-              <td id="romDD" class="byte">00</td>
-              <td id="romDE" class="byte">00</td>
-              <td id="romDF" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">E0</td>
-              <td id="romE0" class="byte">00</td>
-              <td id="romE1" class="byte">00</td>
-              <td id="romE2" class="byte">00</td>
-              <td id="romE3" class="byte">00</td>
-              <td id="romE4" class="byte">00</td>
-              <td id="romE5" class="byte">00</td>
-              <td id="romE6" class="byte">00</td>
-              <td id="romE7" class="byte">00</td>
-              <td id="romE8" class="byte">00</td>
-              <td id="romE9" class="byte">00</td>
-              <td id="romEA" class="byte">00</td>
-              <td id="romEB" class="byte">00</td>
-              <td id="romEC" class="byte">00</td>
-              <td id="romED" class="byte">00</td>
-              <td id="romEE" class="byte">00</td>
-              <td id="romEF" class="byte">00</td>
-            </tr>
-            <tr class="leading-4">
-              <td class="address">F0</td>
-              <td id="romF0" class="byte">00</td>
-              <td id="romF1" class="byte">00</td>
-              <td id="romF2" class="byte">00</td>
-              <td id="romF3" class="byte">00</td>
-              <td id="romF4" class="byte">00</td>
-              <td id="romF5" class="byte">00</td>
-              <td id="romF6" class="byte">00</td>
-              <td id="romF7" class="byte">00</td>
-              <td id="romF8" class="byte">00</td>
-              <td id="romF9" class="byte">00</td>
-              <td id="romFA" class="byte">00</td>
-              <td id="romFB" class="byte">00</td>
-              <td id="romFC" class="byte">00</td>
-              <td id="romFD" class="byte">00</td>
-              <td id="romFE" class="byte">00</td>
-              <td id="romFF" class="byte">00</td>
-            </tr>
-          </table>
+            <table id="rom_view" class="bg-blue-800 border-solid border-black border-2 rounded-lg grid">
+              <tr class="leading-4">
+                <td class="address">&nbsp;</td>
+                <td class="address">00</td>
+                <td class="address">01</td>
+                <td class="address">02</td>
+                <td class="address">03</td>
+                <td class="address">04</td>
+                <td class="address">05</td>
+                <td class="address">06</td>
+                <td class="address">07</td>
+                <td class="address">08</td>
+                <td class="address">09</td>
+                <td class="address">0A</td>
+                <td class="address">0B</td>
+                <td class="address">0C</td>
+                <td class="address">0D</td>
+                <td class="address">0E</td>
+                <td class="address">0F &nbsp;</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">00</td>
+                <td id="rom00" class="byte">00</td>
+                <td id="rom01" class="byte">00</td>
+                <td id="rom02" class="byte">00</td>
+                <td id="rom03" class="byte">00</td>
+                <td id="rom04" class="byte">00</td>
+                <td id="rom05" class="byte">00</td>
+                <td id="rom06" class="byte">00</td>
+                <td id="rom07" class="byte">00</td>
+                <td id="rom08" class="byte">00</td>
+                <td id="rom09" class="byte">00</td>
+                <td id="rom0A" class="byte">00</td>
+                <td id="rom0B" class="byte">00</td>
+                <td id="rom0C" class="byte">00</td>
+                <td id="rom0D" class="byte">00</td>
+                <td id="rom0E" class="byte">00</td>
+                <td id="rom0F" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">10</td>
+                <td id="rom10" class="byte">00</td>
+                <td id="rom11" class="byte">00</td>
+                <td id="rom12" class="byte">00</td>
+                <td id="rom13" class="byte">00</td>
+                <td id="rom14" class="byte">00</td>
+                <td id="rom15" class="byte">00</td>
+                <td id="rom16" class="byte">00</td>
+                <td id="rom17" class="byte">00</td>
+                <td id="rom18" class="byte">00</td>
+                <td id="rom19" class="byte">00</td>
+                <td id="rom1A" class="byte">00</td>
+                <td id="rom1B" class="byte">00</td>
+                <td id="rom1C" class="byte">00</td>
+                <td id="rom1D" class="byte">00</td>
+                <td id="rom1E" class="byte">00</td>
+                <td id="rom1F" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">20</td>
+                <td id="rom20" class="byte">00</td>
+                <td id="rom21" class="byte">00</td>
+                <td id="rom22" class="byte">00</td>
+                <td id="rom23" class="byte">00</td>
+                <td id="rom24" class="byte">00</td>
+                <td id="rom25" class="byte">00</td>
+                <td id="rom26" class="byte">00</td>
+                <td id="rom27" class="byte">00</td>
+                <td id="rom28" class="byte">00</td>
+                <td id="rom29" class="byte">00</td>
+                <td id="rom2A" class="byte">00</td>
+                <td id="rom2B" class="byte">00</td>
+                <td id="rom2C" class="byte">00</td>
+                <td id="rom2D" class="byte">00</td>
+                <td id="rom2E" class="byte">00</td>
+                <td id="rom2F" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">30</td>
+                <td id="rom30" class="byte">00</td>
+                <td id="rom31" class="byte">00</td>
+                <td id="rom32" class="byte">00</td>
+                <td id="rom33" class="byte">00</td>
+                <td id="rom34" class="byte">00</td>
+                <td id="rom35" class="byte">00</td>
+                <td id="rom36" class="byte">00</td>
+                <td id="rom37" class="byte">00</td>
+                <td id="rom38" class="byte">00</td>
+                <td id="rom39" class="byte">00</td>
+                <td id="rom3A" class="byte">00</td>
+                <td id="rom3B" class="byte">00</td>
+                <td id="rom3C" class="byte">00</td>
+                <td id="rom3D" class="byte">00</td>
+                <td id="rom3E" class="byte">00</td>
+                <td id="rom3F" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">40</td>
+                <td id="rom40" class="byte">00</td>
+                <td id="rom41" class="byte">00</td>
+                <td id="rom42" class="byte">00</td>
+                <td id="rom43" class="byte">00</td>
+                <td id="rom44" class="byte">00</td>
+                <td id="rom45" class="byte">00</td>
+                <td id="rom46" class="byte">00</td>
+                <td id="rom47" class="byte">00</td>
+                <td id="rom48" class="byte">00</td>
+                <td id="rom49" class="byte">00</td>
+                <td id="rom4A" class="byte">00</td>
+                <td id="rom4B" class="byte">00</td>
+                <td id="rom4C" class="byte">00</td>
+                <td id="rom4D" class="byte">00</td>
+                <td id="rom4E" class="byte">00</td>
+                <td id="rom4F" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">50</td>
+                <td id="rom50" class="byte">00</td>
+                <td id="rom51" class="byte">00</td>
+                <td id="rom52" class="byte">00</td>
+                <td id="rom53" class="byte">00</td>
+                <td id="rom54" class="byte">00</td>
+                <td id="rom55" class="byte">00</td>
+                <td id="rom56" class="byte">00</td>
+                <td id="rom57" class="byte">00</td>
+                <td id="rom58" class="byte">00</td>
+                <td id="rom59" class="byte">00</td>
+                <td id="rom5A" class="byte">00</td>
+                <td id="rom5B" class="byte">00</td>
+                <td id="rom5C" class="byte">00</td>
+                <td id="rom5D" class="byte">00</td>
+                <td id="rom5E" class="byte">00</td>
+                <td id="rom5F" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">60</td>
+                <td id="rom60" class="byte">00</td>
+                <td id="rom61" class="byte">00</td>
+                <td id="rom62" class="byte">00</td>
+                <td id="rom63" class="byte">00</td>
+                <td id="rom64" class="byte">00</td>
+                <td id="rom65" class="byte">00</td>
+                <td id="rom66" class="byte">00</td>
+                <td id="rom67" class="byte">00</td>
+                <td id="rom68" class="byte">00</td>
+                <td id="rom69" class="byte">00</td>
+                <td id="rom6A" class="byte">00</td>
+                <td id="rom6B" class="byte">00</td>
+                <td id="rom6C" class="byte">00</td>
+                <td id="rom6D" class="byte">00</td>
+                <td id="rom6E" class="byte">00</td>
+                <td id="rom6F" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">70</td>
+                <td id="rom70" class="byte">00</td>
+                <td id="rom71" class="byte">00</td>
+                <td id="rom72" class="byte">00</td>
+                <td id="rom73" class="byte">00</td>
+                <td id="rom74" class="byte">00</td>
+                <td id="rom75" class="byte">00</td>
+                <td id="rom76" class="byte">00</td>
+                <td id="rom77" class="byte">00</td>
+                <td id="rom78" class="byte">00</td>
+                <td id="rom79" class="byte">00</td>
+                <td id="rom7A" class="byte">00</td>
+                <td id="rom7B" class="byte">00</td>
+                <td id="rom7C" class="byte">00</td>
+                <td id="rom7D" class="byte">00</td>
+                <td id="rom7E" class="byte">00</td>
+                <td id="rom7F" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">80</td>
+                <td id="rom80" class="byte">00</td>
+                <td id="rom81" class="byte">00</td>
+                <td id="rom82" class="byte">00</td>
+                <td id="rom83" class="byte">00</td>
+                <td id="rom84" class="byte">00</td>
+                <td id="rom85" class="byte">00</td>
+                <td id="rom86" class="byte">00</td>
+                <td id="rom87" class="byte">00</td>
+                <td id="rom88" class="byte">00</td>
+                <td id="rom89" class="byte">00</td>
+                <td id="rom8A" class="byte">00</td>
+                <td id="rom8B" class="byte">00</td>
+                <td id="rom8C" class="byte">00</td>
+                <td id="rom8D" class="byte">00</td>
+                <td id="rom8E" class="byte">00</td>
+                <td id="rom8F" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">90</td>
+                <td id="rom90" class="byte">00</td>
+                <td id="rom91" class="byte">00</td>
+                <td id="rom92" class="byte">00</td>
+                <td id="rom93" class="byte">00</td>
+                <td id="rom94" class="byte">00</td>
+                <td id="rom95" class="byte">00</td>
+                <td id="rom96" class="byte">00</td>
+                <td id="rom97" class="byte">00</td>
+                <td id="rom98" class="byte">00</td>
+                <td id="rom99" class="byte">00</td>
+                <td id="rom9A" class="byte">00</td>
+                <td id="rom9B" class="byte">00</td>
+                <td id="rom9C" class="byte">00</td>
+                <td id="rom9D" class="byte">00</td>
+                <td id="rom9E" class="byte">00</td>
+                <td id="rom9F" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">A0</td>
+                <td id="romA0" class="byte">00</td>
+                <td id="romA1" class="byte">00</td>
+                <td id="romA2" class="byte">00</td>
+                <td id="romA3" class="byte">00</td>
+                <td id="romA4" class="byte">00</td>
+                <td id="romA5" class="byte">00</td>
+                <td id="romA6" class="byte">00</td>
+                <td id="romA7" class="byte">00</td>
+                <td id="romA8" class="byte">00</td>
+                <td id="romA9" class="byte">00</td>
+                <td id="romAA" class="byte">00</td>
+                <td id="romAB" class="byte">00</td>
+                <td id="romAC" class="byte">00</td>
+                <td id="romAD" class="byte">00</td>
+                <td id="romAE" class="byte">00</td>
+                <td id="romAF" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">B0</td>
+                <td id="romB0" class="byte">00</td>
+                <td id="romB1" class="byte">00</td>
+                <td id="romB2" class="byte">00</td>
+                <td id="romB3" class="byte">00</td>
+                <td id="romB4" class="byte">00</td>
+                <td id="romB5" class="byte">00</td>
+                <td id="romB6" class="byte">00</td>
+                <td id="romB7" class="byte">00</td>
+                <td id="romB8" class="byte">00</td>
+                <td id="romB9" class="byte">00</td>
+                <td id="romBA" class="byte">00</td>
+                <td id="romBB" class="byte">00</td>
+                <td id="romBC" class="byte">00</td>
+                <td id="romBD" class="byte">00</td>
+                <td id="romBE" class="byte">00</td>
+                <td id="romBF" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">C0</td>
+                <td id="romC0" class="byte">00</td>
+                <td id="romC1" class="byte">00</td>
+                <td id="romC2" class="byte">00</td>
+                <td id="romC3" class="byte">00</td>
+                <td id="romC4" class="byte">00</td>
+                <td id="romC5" class="byte">00</td>
+                <td id="romC6" class="byte">00</td>
+                <td id="romC7" class="byte">00</td>
+                <td id="romC8" class="byte">00</td>
+                <td id="romC9" class="byte">00</td>
+                <td id="romCA" class="byte">00</td>
+                <td id="romCB" class="byte">00</td>
+                <td id="romCC" class="byte">00</td>
+                <td id="romCD" class="byte">00</td>
+                <td id="romCE" class="byte">00</td>
+                <td id="romCF" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">D0</td>
+                <td id="romD0" class="byte">00</td>
+                <td id="romD1" class="byte">00</td>
+                <td id="romD2" class="byte">00</td>
+                <td id="romD3" class="byte">00</td>
+                <td id="romD4" class="byte">00</td>
+                <td id="romD5" class="byte">00</td>
+                <td id="romD6" class="byte">00</td>
+                <td id="romD7" class="byte">00</td>
+                <td id="romD8" class="byte">00</td>
+                <td id="romD9" class="byte">00</td>
+                <td id="romDA" class="byte">00</td>
+                <td id="romDB" class="byte">00</td>
+                <td id="romDC" class="byte">00</td>
+                <td id="romDD" class="byte">00</td>
+                <td id="romDE" class="byte">00</td>
+                <td id="romDF" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">E0</td>
+                <td id="romE0" class="byte">00</td>
+                <td id="romE1" class="byte">00</td>
+                <td id="romE2" class="byte">00</td>
+                <td id="romE3" class="byte">00</td>
+                <td id="romE4" class="byte">00</td>
+                <td id="romE5" class="byte">00</td>
+                <td id="romE6" class="byte">00</td>
+                <td id="romE7" class="byte">00</td>
+                <td id="romE8" class="byte">00</td>
+                <td id="romE9" class="byte">00</td>
+                <td id="romEA" class="byte">00</td>
+                <td id="romEB" class="byte">00</td>
+                <td id="romEC" class="byte">00</td>
+                <td id="romED" class="byte">00</td>
+                <td id="romEE" class="byte">00</td>
+                <td id="romEF" class="byte">00</td>
+              </tr>
+              <tr class="leading-4">
+                <td class="address">F0</td>
+                <td id="romF0" class="byte">00</td>
+                <td id="romF1" class="byte">00</td>
+                <td id="romF2" class="byte">00</td>
+                <td id="romF3" class="byte">00</td>
+                <td id="romF4" class="byte">00</td>
+                <td id="romF5" class="byte">00</td>
+                <td id="romF6" class="byte">00</td>
+                <td id="romF7" class="byte">00</td>
+                <td id="romF8" class="byte">00</td>
+                <td id="romF9" class="byte">00</td>
+                <td id="romFA" class="byte">00</td>
+                <td id="romFB" class="byte">00</td>
+                <td id="romFC" class="byte">00</td>
+                <td id="romFD" class="byte">00</td>
+                <td id="romFE" class="byte">00</td>
+                <td id="romFF" class="byte">00</td>
+              </tr>
+            </table>
+          </div>
+          <div id="memory_options">
+            <select id="rom_page_select">
+              <option value="0" selected="select">Page 0</option>
+              <option value="1">Page 1</option>
+              <option value="2">Page 2</option>
+              <option value="3">Page 3</option>
+              <option value="4">Page 4</option>
+              <option value="5">Page 5</option>
+              <option value="6">Page 6</option>
+              <option value="7">Page 7</option>
+              <option value="8">Page 8</option>
+              <option value="9">Page 9</option>
+              <option value="10">Page 10</option>
+              <option value="11">Page 11</option>
+              <option value="12">Page 12</option>
+              <option value="13">Page 13</option>
+              <option value="14">Page 14</option>
+              <option value="15">Page 15</option>
+            </select>
           </div>
         </div>
       </div>

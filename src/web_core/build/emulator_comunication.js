@@ -1,7 +1,48 @@
 // Using wasm32
 
 var pCPU;
-var pROM;
+
+class CPU {
+    // constructor() {
+    //     this.C = 0;
+    //     this.TEST = 0;
+    //     this.ACC = 0;
+    //     this.OPA = 0;
+    //     this.OPR = 0;
+    //     this.PC = 0;
+    //     this.STACK = 0;
+    //     this.registerPairs = new Uint8Array(8).fill(0);
+    //     this.pRamBanks = new Uint32Array(8).fill(0);
+    //     this.lastInstruction = 0;
+    //     this.lastData = 0;
+    // }
+
+    constructor(ptrStruct) {
+        var bytes = new Uint8Array(memory.buffer, ptrStr).slice(0, 58);
+        this.C = bytes[0] & 0b0001,
+        this.TEST = (bytes[0] & 0b0000_0100) >> 2,
+        this.ACC = (bytes[0] & 0b0111_1000) >> 3,
+        this.OPA = ((bytes[0] & 0b1000_0000) >> 7) | ((bytes[1] & 0b0000_0111) << 1),
+        this.OPR = (bytes[1] & 0b0111_1000) >> 3,
+        this.PC = ((bytes[1] & 0b1000_0000) >> 7) | (bytes[2] << 1) | ((bytes[3] & 0b0000_0111) << 9),
+        this.STACK = ((bytes[3] & 0b1111_1000) >> 3) | (bytes[4] << 5) | (bytes[5] << 13) | (bytes[6] << 21) | ((bytes[7] & 0b0111_1111) << 29),
+        this.registerPairs = [bytes[12], bytes[13], bytes[14], bytes[15], bytes[16], bytes[17], bytes[18], bytes[19]],
+        this.pRamBanks = [
+            bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24),
+            bytes[28] | (bytes[29] << 8) | (bytes[30] << 16) | (bytes[31] << 24),
+            bytes[32] | (bytes[33] << 8) | (bytes[34] << 16) | (bytes[35] << 24),
+            bytes[36] | (bytes[37] << 8) | (bytes[38] << 16) | (bytes[39] << 24),
+            bytes[40] | (bytes[41] << 8) | (bytes[42] << 16) | (bytes[43] << 24),
+            bytes[44] | (bytes[45] << 8) | (bytes[46] << 16) | (bytes[47] << 24),
+            bytes[48] | (bytes[49] << 8) | (bytes[50] << 16) | (bytes[51] << 24),
+            bytes[52] | (bytes[53] << 8) | (bytes[54] << 16) | (bytes[55] << 24)
+        ],
+        this.lastInstruction = bytes[56],
+        this.lastData = bytes[57]
+    }
+
+}
+
 
 var memory = new WebAssembly.Memory({
     initial: 256,  // initial size in pages, (1 page = 64 KiB)
@@ -77,6 +118,7 @@ function decodeCPU(ptr) {
         PC: ((bytes[1] & 0b1000_0000) >> 7) | (bytes[2] << 1) | ((bytes[3] & 0b0000_0111) << 9),
         STACK: ((bytes[3] & 0b1111_1000) >> 3) | (bytes[4] << 5) | (bytes[5] << 13) | (bytes[6] << 21) | ((bytes[7] & 0b0111_1111) << 29),
         registerPairs: [bytes[12], bytes[13], bytes[14], bytes[15], bytes[16], bytes[17], bytes[18], bytes[19]],
+        pProgramRom: bytes[20] | (bytes[21] << 8) | (bytes[22] << 16) | (bytes[23] << 24),
         pRamBanks: [
             bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24),
             bytes[28] | (bytes[29] << 8) | (bytes[30] << 16) | (bytes[31] << 24),
@@ -122,7 +164,7 @@ function initROM() {
         0x5d, 0x87, 0x12, 0x5d, 0xb0, 0xd1, 0x50, 0x06, 0xc0, 0x20, 0x00, 0x22, 0x00, 0x24, 0x01, 0x26,
         0x00, 0x50, 0x16, 0x20, 0x01, 0x50, 0x16, 0x50, 0x21, 0x50, 0x16, 0x40, 0x57, 0x40, 0x5d];
     var ptr = encodeArray(arr, arr.length, 1);
-    pROM = exports.initROM(ptr, arr.length);
+    exports.initROM(ptr, arr.length);
     exports.wasmFree(ptr);
 }
 
@@ -131,7 +173,7 @@ function stepCPU(steps) {
 
     var cpu = decodeCPU(pCPU);
     var result = getInstruction(getOpcode(cpu.lastInstruction), cpu);
-
+    
     // Update CPU view
     const opcode = document.getElementById("opcode");
     opcode.innerHTML = result;
@@ -160,20 +202,21 @@ function stepCPU(steps) {
         console.log("C flag set");
     }
 
-    updateRomView();
+    updateRomView(cpu.pProgramRom);
 
         
 }
 
-function updateRomView() {
-    var rom = decodeROM(pROM);
+function updateRomView(pRom) {
+    var rom = decodeROM(pRom);
     var romData = rom.memory;
     var hex = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
+    const offset = document.getElementById("rom_page_select").selectedIndex * 0xFF;
     for (var i = 0; i < 16; i++) {
         for (var j = 0; j < 16; j++) {
             var id = "rom" + hex[i] + hex[j];
             var cell = document.getElementById(id);
-            var byteText = romData[i * 16 + j].toString(16).toUpperCase().padStart(2, "0");
+            var byteText = romData[i * 16 + j + offset].toString(16).toUpperCase().padStart(2, "0");
             cell.innerHTML = byteText;
         }
     }
@@ -262,7 +305,7 @@ function getOpcode(instruction) {
             case 0xB: return "DAA";
             case 0xC: return "KBP";
             case 0xD: return "DCL";
-            default: return "???";
+            default : return "???";
         }
     }
     
