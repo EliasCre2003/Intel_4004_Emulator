@@ -90,7 +90,6 @@ function decodeCPU(ptr) {
         lastInstruction: bytes[56],
         lastData: bytes[57]
     }
-    console.log(cpu);
     return cpu;
 }
 
@@ -155,6 +154,11 @@ function stepCPU(steps) {
         reg.innerHTML = `${((cpu.registerPairs[i] >> 4) & 0xF).toString(16)}`;
     }
 
+    const cFlag = document.getElementById("cflag");
+    cFlag.innerHTML = `${cpu.C}`;
+    if (cpu.C == 1) {
+        console.log("C flag set");
+    }
 
     updateRomView();
 
