@@ -7,16 +7,17 @@ var hex = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D",
 class CPU {
     constructor(ptrStruct) {
         this.ptr = ptrStruct;
-        this.update(ptrStruct);   
+        this.update();   
     }
 
     update() {
-        var bytes = new Uint8Array(memory.buffer, this.ptr).slice(0, 62);
+        var bytes = new Uint8Array(memory.buffer, this.ptr).slice(0, 58);
         this.C = bytes[0] & 0b0001,
         this.TEST = (bytes[0] & 0b0000_0100) >> 2,
         this.ACC = (bytes[0] & 0b0111_1000) >> 3,
         this.OPA = ((bytes[0] & 0b1000_0000) >> 7) | ((bytes[1] & 0b0000_0111) << 1),
         this.OPR = (bytes[1] & 0b0111_1000) >> 3,
+        this.lastPC = this.PC | 0;
         this.PC = ((bytes[1] & 0b1000_0000) >> 7) | (bytes[2] << 1) | ((bytes[3] & 0b0000_0111) << 9),
         this.STACK = ((bytes[3] & 0b1111_1000) >> 3) | (bytes[4] << 5) | (bytes[5] << 13) | (bytes[6] << 21) | ((bytes[7] & 0b0111_1111) << 29),
         this.registerPairs = [bytes[12], bytes[13], bytes[14], bytes[15], bytes[16], bytes[17], bytes[18], bytes[19]],
@@ -32,44 +33,13 @@ class CPU {
             this.decodeRAM(bytes[52] | (bytes[53] << 8) | (bytes[54] << 16) | (bytes[55] << 24))
             // this.decodeRAM(bytes[56] | (bytes[57] << 8) | (bytes[58] << 16) | (bytes[59] << 24))
         ],
-        this.lastInstruction = bytes[60],
-        this.lastData = bytes[61]
-        console.log(bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24))
+        this.lastInstruction = bytes[56],
+        this.lastData = bytes[57]
     }
     stepCPU(steps=1) {
         console.log(exports.stepCPU(steps));
         this.update(pCPU);
-
-        const opcode = document.getElementById("opcode");
-        console.log(getOpcode(this.lastInstruction));
-        opcode.innerHTML = getInstruction(getOpcode(this.lastInstruction), this);
-
-        const acc = document.getElementById("acc");
-        const accText = `0x${this.ACC.toString(16).toUpperCase()} 0b${this.ACC.toString(2).padStart(4, "0")} ${this.ACC.toString().padStart(2, "0")}`;
-        acc.innerHTML = accText;
-
-        const pc = document.getElementById("pc");
-        const pcText = `0x${this.PC.toString(16).toUpperCase().padStart(3, "0")}
-                        0x${((this.STACK) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}
-                        0x${((this.STACK >> 12) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}
-                        0x${((this.STACK >> 24) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}`;
-        pc.innerHTML = pcText;
-
-        for (var i = 0; i < 8; i++) {
-            var reg = document.getElementById(`r${2*i}`);
-            reg.innerHTML = `${(this.registerPairs[i] & 0xF).toString(16).toUpperCase()}`;
-            reg = document.getElementById(`r${2*i+1}`);
-            reg.innerHTML = `${((this.registerPairs[i] >> 4) & 0xF).toString(16)}`;
-        }
-
-        const cFlag = document.getElementById("cflag");
-        cFlag.innerHTML = `${this.C}`;
-        if (this.C == 1) {
-            console.log("C flag set");
-        }
-
-        updateRomView(this);
-        updateRamView(this);
+        this.updateGUI();
     }
 
     decodeROM(ptrStruct) {
@@ -93,6 +63,39 @@ class CPU {
             index: bytes[163]
         }
         return ram;
+    }
+
+    updateGUI() {
+        const opcode = document.getElementById("opcode");
+        console.log(getOpcode(this.lastInstruction));
+        opcode.innerHTML = getInstruction(getOpcode(this.lastInstruction), this);
+
+        const acc = document.getElementById("acc");
+        const accText = `0x${this.ACC.toString(16).toUpperCase()} 0b${this.ACC.toString(2).padStart(4, "0")} ${this.ACC.toString().padStart(2, "0")}`;
+        acc.innerHTML = accText;
+
+        const pc = document.getElementById("pc");
+        const pcText = `0x${this.lastPC.toString(16).toUpperCase().padStart(3, "0")}
+                        0x${((this.STACK) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}
+                        0x${((this.STACK >> 12) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}
+                        0x${((this.STACK >> 24) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}`;
+        pc.innerHTML = pcText;
+
+        for (var i = 0; i < 8; i++) {
+            var reg = document.getElementById(`r${2*i}`);
+            reg.innerHTML = `${(this.registerPairs[i] & 0xF).toString(16).toUpperCase()}`;
+            reg = document.getElementById(`r${2*i+1}`);
+            reg.innerHTML = `${((this.registerPairs[i] >> 4) & 0xF).toString(16)}`;
+        }
+
+        const cFlag = document.getElementById("cflag");
+        cFlag.innerHTML = `${this.C}`;
+        if (this.C == 1) {
+            console.log("C flag set");
+        }
+
+        updateRomView(this);
+        updateRamView(this);
     }
 
 }
@@ -305,7 +308,7 @@ function updateRomView(cpu) {
             var cell = document.getElementById("rom" + hex[i] + hex[j]);
             var byteText = romData[bitAddress].toString(16).toUpperCase().padStart(2, "0");
             cell.innerHTML = byteText;
-            if (cpu.PC == bitAddress) {
+            if (cpu.lastPC == bitAddress) {
                 cell.style = "background-color: #00FF00";
             }
             else if (cell.style != "") cell.style = "";
@@ -321,7 +324,6 @@ function updateRamView(cpu) {
             var cell = document.getElementById("ram" + hex[i] + hex[j]);
             var byteText = romData[i * 16 + j].toString(16).toUpperCase().padStart(2, "0");
             cell.innerHTML = byteText;
-            console.log(cell);
         }
     }
 }
@@ -330,6 +332,7 @@ function initEmulator() {
     initROM();
     pCPU = exports.resetCPU();
     cpu = new CPU(pCPU);
+    cpu.stepCPU(1);
     document.getElementById("rom_page_select").onchange = function() {
         cpu.update();
         updateRomView(cpu);
