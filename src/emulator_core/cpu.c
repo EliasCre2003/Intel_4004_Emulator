@@ -6,10 +6,14 @@ void initializeCPU(CPU *cpu, ROM *rom, uint16 startAddress, word startPage)
     cpu->PC = startAddress + (startPage >> 8);
     for (int i = 0; i < CPU_RAM_BANKS_N; i++)
     {
-        cpu->ramBanks[i] = malloc(sizeof(RAM));
+        cpu->ramBanks[i] = (RAM *)calloc(1, sizeof(RAM));
         initializeRAM(cpu->ramBanks[i]);
     }
     cpu->programRom = rom;
+    for (int i = 0; i < CPU_REGISTER_PAIRS_N; i++)
+    {
+        cpu->registerPairs[i] = 0;
+    }
 }
 
 void NOP(CPU *cpu)

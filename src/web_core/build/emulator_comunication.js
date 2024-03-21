@@ -1,24 +1,17 @@
 // Using wasm32
 
 var pCPU;
+var cpu;
+var hex = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
 
 class CPU {
-    // constructor() {
-    //     this.C = 0;
-    //     this.TEST = 0;
-    //     this.ACC = 0;
-    //     this.OPA = 0;
-    //     this.OPR = 0;
-    //     this.PC = 0;
-    //     this.STACK = 0;
-    //     this.registerPairs = new Uint8Array(8).fill(0);
-    //     this.pRamBanks = new Uint32Array(8).fill(0);
-    //     this.lastInstruction = 0;
-    //     this.lastData = 0;
-    // }
-
     constructor(ptrStruct) {
-        var bytes = new Uint8Array(memory.buffer, ptrStr).slice(0, 58);
+        this.ptr = ptrStruct;
+        this.update(ptrStruct);   
+    }
+
+    update() {
+        var bytes = new Uint8Array(memory.buffer, this.ptr).slice(0, 62);
         this.C = bytes[0] & 0b0001,
         this.TEST = (bytes[0] & 0b0000_0100) >> 2,
         this.ACC = (bytes[0] & 0b0111_1000) >> 3,
@@ -27,25 +20,90 @@ class CPU {
         this.PC = ((bytes[1] & 0b1000_0000) >> 7) | (bytes[2] << 1) | ((bytes[3] & 0b0000_0111) << 9),
         this.STACK = ((bytes[3] & 0b1111_1000) >> 3) | (bytes[4] << 5) | (bytes[5] << 13) | (bytes[6] << 21) | ((bytes[7] & 0b0111_1111) << 29),
         this.registerPairs = [bytes[12], bytes[13], bytes[14], bytes[15], bytes[16], bytes[17], bytes[18], bytes[19]],
-        this.pRamBanks = [
-            bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24),
-            bytes[28] | (bytes[29] << 8) | (bytes[30] << 16) | (bytes[31] << 24),
-            bytes[32] | (bytes[33] << 8) | (bytes[34] << 16) | (bytes[35] << 24),
-            bytes[36] | (bytes[37] << 8) | (bytes[38] << 16) | (bytes[39] << 24),
-            bytes[40] | (bytes[41] << 8) | (bytes[42] << 16) | (bytes[43] << 24),
-            bytes[44] | (bytes[45] << 8) | (bytes[46] << 16) | (bytes[47] << 24),
-            bytes[48] | (bytes[49] << 8) | (bytes[50] << 16) | (bytes[51] << 24),
-            bytes[52] | (bytes[53] << 8) | (bytes[54] << 16) | (bytes[55] << 24)
+        this.programRom = this.decodeROM(bytes[20] | (bytes[21] << 8) | (bytes[22] << 16) | (bytes[23] << 24)),
+        this.ramBanks = [
+            this.decodeRAM(bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24)),
+            this.decodeRAM(bytes[28] | (bytes[29] << 8) | (bytes[30] << 16) | (bytes[31] << 24)),
+            this.decodeRAM(bytes[32] | (bytes[33] << 8) | (bytes[34] << 16) | (bytes[35] << 24)),
+            this.decodeRAM(bytes[36] | (bytes[37] << 8) | (bytes[38] << 16) | (bytes[39] << 24)),
+            this.decodeRAM(bytes[40] | (bytes[41] << 8) | (bytes[42] << 16) | (bytes[43] << 24)),
+            this.decodeRAM(bytes[44] | (bytes[45] << 8) | (bytes[46] << 16) | (bytes[47] << 24)),
+            this.decodeRAM(bytes[48] | (bytes[49] << 8) | (bytes[50] << 16) | (bytes[51] << 24)),
+            this.decodeRAM(bytes[52] | (bytes[53] << 8) | (bytes[54] << 16) | (bytes[55] << 24))
+            // this.decodeRAM(bytes[56] | (bytes[57] << 8) | (bytes[58] << 16) | (bytes[59] << 24))
         ],
-        this.lastInstruction = bytes[56],
-        this.lastData = bytes[57]
+        this.lastInstruction = bytes[60],
+        this.lastData = bytes[61]
+        console.log(bytes[24] | (bytes[25] << 8) | (bytes[26] << 16) | (bytes[27] << 24))
     }
+    stepCPU(steps=1) {
+        console.log(exports.stepCPU(steps));
+        this.update(pCPU);
+
+        const opcode = document.getElementById("opcode");
+        console.log(getOpcode(this.lastInstruction));
+        opcode.innerHTML = getInstruction(getOpcode(this.lastInstruction), this);
+
+        const acc = document.getElementById("acc");
+        const accText = `0x${this.ACC.toString(16).toUpperCase()} 0b${this.ACC.toString(2).padStart(4, "0")} ${this.ACC.toString().padStart(2, "0")}`;
+        acc.innerHTML = accText;
+
+        const pc = document.getElementById("pc");
+        const pcText = `0x${this.PC.toString(16).toUpperCase().padStart(3, "0")}
+                        0x${((this.STACK) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}
+                        0x${((this.STACK >> 12) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}
+                        0x${((this.STACK >> 24) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}`;
+        pc.innerHTML = pcText;
+
+        for (var i = 0; i < 8; i++) {
+            var reg = document.getElementById(`r${2*i}`);
+            reg.innerHTML = `${(this.registerPairs[i] & 0xF).toString(16).toUpperCase()}`;
+            reg = document.getElementById(`r${2*i+1}`);
+            reg.innerHTML = `${((this.registerPairs[i] >> 4) & 0xF).toString(16)}`;
+        }
+
+        const cFlag = document.getElementById("cflag");
+        cFlag.innerHTML = `${this.C}`;
+        if (this.C == 1) {
+            console.log("C flag set");
+        }
+
+        updateRomView(this);
+        updateRamView(this);
+    }
+
+    decodeROM(ptrStruct) {
+        var bytes = new Uint8Array(memory.buffer, ptrStruct).slice(0, 4097);
+        var rom = {
+            memory: bytes.slice(0, 4096),
+            ioPorts: bytes[4096] & 0b0000_1111,
+        }
+        return rom;
+    }
+
+    decodeRAM(ptrStruct) {
+        var bytes = new Uint8Array(memory.buffer, ptrStruct);
+        var ram = {
+            memory: bytes.slice(0, 128),
+            status: bytes.slice(128, 160),
+            outputs: [bytes[160], bytes[161]],
+            chip: bytes[162] & 0b0000_0011,
+            reg: (bytes[162] & 0b0000_1100) >> 2,
+            character: (bytes[162] & 0b1111_0000) >> 4,
+            index: bytes[163]
+        }
+        return ram;
+    }
+
+}
+
+class ROM {
 
 }
 
 
 var memory = new WebAssembly.Memory({
-    initial: 256,  // initial size in pages, (1 page = 64 KiB)
+    initial: 128,  // initial size in pages, (1 page = 64 KiB)
     maximum: 512   // maximum size in pages
 })
 var exports;
@@ -62,6 +120,80 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), {
     exports = results.instance.exports;
     memory = results.instance.exports.memory;
 });
+
+var rom_table = document.getElementById("rom_view");
+
+var topRow = document.createElement("tr");
+topRow.className = "leading-4";
+
+var topCell = document.createElement("td");
+topCell.className = "address";
+topCell.innerHTML = "&nbsp;&nbsp;";
+topRow.appendChild(topCell);
+
+for (var i = 0; i < 16; i++) {
+    var cell = document.createElement("td");
+    cell.className = "address";
+    cell.innerHTML = "0" + hex[i];
+    topRow.appendChild(cell);
+}
+rom_table.appendChild(topRow);
+
+for (var i = 0; i < 16; i++) {
+    var row = document.createElement("tr");
+    row.className = "leading-4";
+
+    var cell = document.createElement("td");
+    cell.className = "address";
+    cell.innerHTML = hex[i] + "0";
+    row.appendChild(cell);
+    for (var j = 0; j < 16; j++) {
+        var cell = document.createElement("td");
+        cell.id = "rom" + hex[i] + hex[j];
+        cell.className = "byte";
+        cell.innerHTML = "00";
+        row.appendChild(cell);
+    }
+    rom_table.appendChild(row);
+}
+
+
+var ram_table = document.getElementById("ram_view");
+var topRow = document.createElement("tr");
+topRow.className = "leading-4";
+
+var topCell = document.createElement("td");
+topCell.className = "address";
+topCell.innerHTML = "&nbsp;&nbsp;";
+topRow.appendChild(topCell);
+
+for (var i = 0; i < 16; i++) {
+    var cell = document.createElement("td");
+    cell.className = "address";
+    cell.innerHTML = "0" + hex[i];
+    topRow.appendChild(cell);
+}
+ram_table.appendChild(topRow);
+
+for (var i = 0; i < 8; i++) {
+    var row = document.createElement("tr");
+    row.className = "leading-4";
+
+    var cell = document.createElement("td");
+    cell.className = "address";
+    cell.innerHTML = hex[i] + "0";
+    row.appendChild(cell);
+    for (var j = 0; j < 16; j++) {
+        var cell = document.createElement("td");
+        cell.id = "ram" + hex[i] + hex[j];
+        cell.className = "byte";
+        cell.innerHTML = "00";
+        row.appendChild(cell);
+    }
+    ram_table.appendChild(row);
+}
+
+
 
 function encodeArray(arr, len, sizeof=1) {
     var ptr;
@@ -83,7 +215,6 @@ function encodeArray(arr, len, sizeof=1) {
     }
     return ptr;
 }
-
 
 function decodeArray(ptr, len)
 {
@@ -135,16 +266,6 @@ function decodeCPU(ptr) {
     return cpu;
 }
 
-function decodeRAM(ptr) {
-    var bytes = new Uint8Array(memory.buffer, ptr);
-    ram = {
-        memory: bytes.slice(0, 128),
-        status: bytes.slice(128, 160),
-        outputs: [bytes[160], bytes[161]]
-    }
-    return ram;
-}
-
 function decodeROM(ptr) {
     var bytes = new Uint8Array(memory.buffer, ptr).slice(0, 4097);
     var rom = {
@@ -162,62 +283,45 @@ function initROM() {
         0xc0, 0x26, 0x00, 0x25, 0xe9, 0xb7, 0xd2, 0x50, 0x06, 0x25, 0xe9, 0x87, 0xb1, 0x26, 0x00, 0x1a,
         0x33, 0x26, 0x01, 0xd3, 0x50, 0x0c, 0x25, 0xe9, 0xb6, 0xd2, 0x50, 0x06, 0x25, 0xe9, 0x86, 0x12,
         0x5d, 0x87, 0x12, 0x5d, 0xb0, 0xd1, 0x50, 0x06, 0xc0, 0x20, 0x00, 0x22, 0x00, 0x24, 0x01, 0x26,
-        0x00, 0x50, 0x16, 0x20, 0x01, 0x50, 0x16, 0x50, 0x21, 0x50, 0x16, 0x40, 0x57, 0x40, 0x5d];
+        0x00, 0x50, 0x16, 0x20, 0x01, 0x50, 0x16, 0x50, 0x21, 0x50, 0x16, 0x40, 0x57, 0x40, 0x5d       ];
     var ptr = encodeArray(arr, arr.length, 1);
     exports.initROM(ptr, arr.length);
     exports.wasmFree(ptr);
 }
 
 function stepCPU(steps) {
-    exports.stepCPU(steps);
 
-    var cpu = decodeCPU(pCPU);
-    var result = getInstruction(getOpcode(cpu.lastInstruction), cpu);
-    
-    // Update CPU view
-    const opcode = document.getElementById("opcode");
-    opcode.innerHTML = result;
-
-    const acc = document.getElementById("acc");
-    const accText = `0x${cpu.ACC.toString(16).toUpperCase()} 0b${cpu.ACC.toString(2).padStart(4, "0")} ${cpu.ACC.toString().padStart(2, "0")}`;
-    acc.innerHTML = accText;
-
-    const pc = document.getElementById("pc");
-    const pcText = `0x${cpu.PC.toString(16).toUpperCase().padStart(3, "0")}
-                     0x${((cpu.STACK) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}
-                     0x${((cpu.STACK >> 12) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}
-                     0x${((cpu.STACK >> 24) & 0xFFF).toString(16).toUpperCase().padStart(3, "0")}`;
-    pc.innerHTML = pcText;
-
-    for (var i = 0; i < 8; i++) {
-        var reg = document.getElementById(`r${2*i}`);
-        reg.innerHTML = `${(cpu.registerPairs[i] & 0xF).toString(16).toUpperCase()}`;
-        reg = document.getElementById(`r${2*i+1}`);
-        reg.innerHTML = `${((cpu.registerPairs[i] >> 4) & 0xF).toString(16)}`;
-    }
-
-    const cFlag = document.getElementById("cflag");
-    cFlag.innerHTML = `${cpu.C}`;
-    if (cpu.C == 1) {
-        console.log("C flag set");
-    }
-
-    updateRomView(cpu.pProgramRom);
+    cpu.stepCPU(steps); 
 
         
 }
 
-function updateRomView(pRom) {
-    var rom = decodeROM(pRom);
-    var romData = rom.memory;
-    var hex = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
+function updateRomView(cpu) {
+    var romData = cpu.programRom.memory;
     const offset = document.getElementById("rom_page_select").selectedIndex * 0xFF;
     for (var i = 0; i < 16; i++) {
         for (var j = 0; j < 16; j++) {
-            var id = "rom" + hex[i] + hex[j];
-            var cell = document.getElementById(id);
-            var byteText = romData[i * 16 + j + offset].toString(16).toUpperCase().padStart(2, "0");
+            const bitAddress = i * 16 + j + offset;
+            var cell = document.getElementById("rom" + hex[i] + hex[j]);
+            var byteText = romData[bitAddress].toString(16).toUpperCase().padStart(2, "0");
             cell.innerHTML = byteText;
+            if (cpu.PC == bitAddress) {
+                cell.style = "background-color: #00FF00";
+            }
+            else if (cell.style != "") cell.style = "";
+        }
+    }
+}
+
+function updateRamView(cpu) {
+    var romData = cpu.ramBanks[0].memory;
+    // console.log(cpu.ramBanks);
+    for (var i = 0; i < 8; i++) {
+        for (var j = 0; j < 16; j++) {
+            var cell = document.getElementById("ram" + hex[i] + hex[j]);
+            var byteText = romData[i * 16 + j].toString(16).toUpperCase().padStart(2, "0");
+            cell.innerHTML = byteText;
+            console.log(cell);
         }
     }
 }
@@ -225,8 +329,12 @@ function updateRomView(pRom) {
 function initEmulator() {
     initROM();
     pCPU = exports.resetCPU();
+    cpu = new CPU(pCPU);
+    document.getElementById("rom_page_select").onchange = function() {
+        cpu.update();
+        updateRomView(cpu);
+    }
 }
-
 
 var sleepSetTimeout_ctrl;
 

@@ -29,12 +29,12 @@ int main()
 // }
 
 EMSCRIPTEN_KEEPALIVE
-void stepCPU(int steps)
+RAM *stepCPU(int steps)
 {
     execute(cpu, steps, true);
-    return cpu->programRom;
     // wack(cpu);
     // return cpu->lastInstruction;
+    return cpu->ramBanks[0];
 }
 
 EMSCRIPTEN_KEEPALIVE

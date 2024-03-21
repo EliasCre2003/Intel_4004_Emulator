@@ -2,6 +2,7 @@
 
 void initializeRAM(RAM *ram)
 {
+    ram->memory[0] = 0;
     ram->index = 0;
 }
 
