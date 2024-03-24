@@ -1,0 +1,59 @@
+                JUN START
+
+INC_SAVE,       ISZ R5 NO_C_SAVE
+                INC R4
+                LD R4
+                DAC
+                SUB R15
+                JCN 0b0010 NO_C_SAVE
+                INC R9
+                LD R9               
+                SUB R8
+                JCN 0b1010 END
+                LD R9
+                DCL
+NO_C_SAVE,      BBL 0
+
+SAVE,           LD R2
+                SRC P2
+                WRM
+                JMS INC_SAVE
+                LD R3
+                SRC P2
+                WRM
+                JMS INC_SAVE
+                BBL 0
+
+INC_FACTORS,    ISZ R1 NO_C_FACT
+                INC R0
+NO_C_FACT,      BBL 0
+
+ADD_PRODUCT,    CLB
+                XCH R3
+                ADD R0
+                JCN 0b1010 NO_INC_R2
+                INC R2
+NO_INC_R2,      XCH R3
+                BBL 0 
+
+MUL,            FIM R2R3 0x00        ; product
+                FIM R6R7 0        ; loop count
+MUL_LOOP,       LD R1
+                SUB R7
+                JCN 0b0100 MUL_END
+                JMS ADD_PRODUCT
+                INC R7
+                JUN MUL_LOOP
+MUL_END,        BBL 0
+
+START,          FIM R0R1 0x00        ; factors
+                FIM P2 0x00          ; save address
+                FIM R8R9 0x20        ; ram bank
+                FIM R14R15 15         ; max high address
+LOOP,           JMS MUL
+                JMS INC_FACTORS
+                JMS SAVE
+                JCN 0b0100 LOOP
+
+END,            JUN END
+

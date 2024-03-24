@@ -4,11 +4,11 @@ INC_P1,     ISZ R3 NOCARRY1
             INC R2
 NOCARRY1,   BBL 0
 
-ADD_P2,		ADD R5
-            XCH R5
+ADD_P2,		ADD R5				; adds load addres (R5) to ACC
+            XCH R5				; switches load address (R5) and ACC
             JCN 0b1010 NO_C_ADD2
-            INC R4
-NO_C_ADD2,  BBL 0
+            INC R4				; increments most significant part of load address if carry
+NO_C_ADD2,  BBL 0 				; return
 
 SUB_P2,		XCH R5
 			SUB R5
@@ -30,16 +30,16 @@ SAVE_N,		LD  R0
 			JMS INC_P1
 			BBL 0
 
-FIB,		FIM R6R7 0
-			SRC P2
-			RDM
-			XCH R7
-			LDM 2
-			JMS ADD_P2
-			SRC P2
-            RDM
-            ADD R7
-            XCH R1
+FIB,		FIM R6R7 0			; set temp to 0
+			SRC P2				; selects load address
+			RDM					; reads fib(n-2) from memory to ACC
+			XCH R7				; loads fib(n-2) () from ACC to temp
+			LDM 2				; sets ACC to 2
+			JMS ADD_P2			; increments load address
+			SRC P2				; selects load address
+            RDM					; reads fib(n-2) from memory to ACC
+            ADD R7				; adds temp (R7) to ACC
+            XCH R1				; 
             FIM R6R7 0
 			JCN 0b1010 NO_C_FIB
 			FIM R6R7 1
@@ -61,14 +61,14 @@ NO_C_FIB,   LDM 3
 			JMS ADD_P2
 			BBL 0
 
-START,		FIM P0 0 ; current number
-			FIM P1 0 ; save address
-			FIM P2 1 ; load address
-			FIM R6R7 0 ; temp
-			JMS SAVE_N
-			FIM P0 1
-			JMS SAVE_N
-LOOP,		JMS FIB
+START,		FIM P0 0 			; current number
+			FIM P1 0 			; save address
+			FIM P2 1 			; load address
+			FIM R6R7 0 			; temp
+			JMS SAVE_N 			; saves 1st fib num
+			FIM P0 1			
+			JMS SAVE_N 			; saves 2nd fib num
+LOOP,		JMS FIB     		; starts fib algo
 			JMS SAVE_N
 			JUN LOOP
 
