@@ -83,11 +83,17 @@ function sleep(ms) {
 }
 
 var run = false
-function runCPU(cpu) {
-    if (run) {
+function runCPU(cpu, steps) {
+    if (!run) return;
+    if (steps > 40) {
+        cpu.stepCPU(steps / 40);
+        sleep(25).then(() => {
+            runCPU(cpu, steps);
+        });
+    } else {
         cpu.stepCPU(1);
-        sleep(10).then(() => {
-            runCPU(cpu);
+        sleep(1000 / steps).then(() => {
+            runCPU(cpu, steps);
         });
     }
 }
@@ -95,6 +101,7 @@ function runCPU(cpu) {
 
 function initEmulator() {
     initROM();
+    run = false;
     let pCPU = exports.resetCPU();
     let cpu = new CPU(pCPU, exports, memory.buffer);
     // cpu.stepCPU(1);
@@ -107,7 +114,7 @@ function initEmulator() {
     }
     document.getElementById("run_button").onclick = function() {
         run = true;
-        runCPU(cpu);
+        runCPU(cpu, document.getElementById("step_count").value);
     }
     document.getElementById("stop_button").onclick = function() {
         run = false;
@@ -129,7 +136,7 @@ function initEmulator() {
 
 
 var memory = new WebAssembly.Memory({
-    initial: 128,  // initial size in pages, (1 page = 64 KiB)
+    initial: 64,  // initial size in pages, (1 page = 64 KiB)
     maximum: 512   // maximum size in pages
 })
 var exports;
@@ -152,7 +159,7 @@ WebAssembly.instantiateStreaming(fetch("emulator.wasm"), {
 var reg_pairs = document.getElementById("reg_pair_view");
 
 let table = document.createElement("table");
-table.appendChild(topRowRegPairs());
+// table.appendChild(topRowRegPairs());
 for (let i = 0; i < 4; i++) {
     let row = document.createElement("tr");
     row.className = "leading-3";
@@ -160,7 +167,7 @@ for (let i = 0; i < 4; i++) {
         let col = document.createElement("td");
         if (j == -1) {
             col.className = "font-bold";
-            col.innerHTML = `${i}&nbsp;`;
+            col.innerHTML = `R${2*i}R${2*i+1}&nbsp;`;
         }
         else {
             col.id = `r${2*i+j}`;
@@ -172,18 +179,19 @@ for (let i = 0; i < 4; i++) {
 reg_pairs.appendChild(table);
 
 table = document.createElement("table");
-table.appendChild(topRowRegPairs());
+// table.appendChild(topRowRegPairs());
 for (let i = 4; i < 8; i++) {
     let row = document.createElement("tr");
     row.className = "leading-3";
     for (let j = -1; j < 3; j++) {
         let col = document.createElement("td");
         if (j == -1) {
-            col.innerHTML = "&nbsp;";
+            col.className = "font-bold";
+            if (i == 4) col.innerHTML = `&nbsp;R${2*i} R${2*i+1}&nbsp;`;
+            else col.innerHTML = `&nbsp;R${2*i}R${2*i+1}&nbsp;`;
         }
         else if (j == 2) {
-            col.className = "font-bold";
-            col.innerHTML = `&nbsp;${i}`;
+            col.innerHTML = "&nbsp;";
         }
         else {
             col.id = `r${2*i+j}`;
