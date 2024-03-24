@@ -7,144 +7,61 @@
     <link rel="stylesheet" href="css/style.css">
 
     <style>
-      #status_rect {
-        width: 100%;
-      }
-      /* .row {
-        padding: 20px;
-        padding-top: 0px;
-      } */
-      /* #row0 {
-        padding-top: 10px;
-      } */
-
-      #memory_view_wrapper {
-        padding: 20px;
-      }
-
-      .memory_view {
-        /* background-color: darkblue; */
-        border: 2px solid black;
-        border-radius: 5px;
-        display: grid;
-      }
       .address {
         font-weight: bold;
       }
-
-
-
     </style>
   </head>
   <body class="font-mono bg-blue-800">
-    <script src="emulator_comunication.js" defer> </script>
-        
     <b class="text-3xl flex justify-center">Intel 4004 Emulator</b>
     <div class="flex justify-center">
       <div class="w-[750px] p-[20px] pl-5 pr-0">
         <b class="text-xl p-2">CPU Status:</b>
         <div class="bg-blue-500 h-100% width-100% text-lg flex border-solid border-[2.5px] rounded-lg border-black">
-          <div id="col0" class="w-[51%] pt-1 pl-2 pr-0">
+          <div id="col0" class="w-[46%] pt-1 pl-2 pr-0">
             <div id="row0" class="pb-2">
               <b>Instruction: </b>
-              <span id="opcode">NOP 0x000</span>
+              <span id="opcode"></span>
             </div>
             <div id="row1" class="pb-2">
               <b>Accumulator: </b>
-              <span id="acc">0x0 0b0000 00</span>
+              <span id="acc"></span>
             </div>
             <div id="row2" class="pb-2">
               <b>PC: </b>
-              <span id="pc">0x000 0x000 0x000 0x000</span>
+              <span id="pc"></span>
             </div>
           </div>
-          <div id="col1" class="w-[25%] text-left pl-0 pt-1">
+          <div id="col1" class="w-[30%] text-left pl-0 pt-1">
             <div id="row0" class="pb-2">
-              <b>Opcode: </b>
-              <span id="opcode">0x00</span>
+              <b>Test-Flag: </b>
+              <span id="tflag"></span>
             </div>
             <div id="row1" class="pb-2">
               <b>Carry-Flag: </b>
-              <span id="cflag">0</span>
+              <span id="cflag"></span>
             </div>
             <div id=row2 class="pb-2">
-              <b>Test-Flag: </b>
-              <span id="tflag">0</span>
+              <b>Memory-Control: </b>
+              <span id="CM"></span>
             </div>
           </div>
           <div id="col2" class="pt-1">
             <div>
               <b>Register Pairs</b>
-              <div class="flex justify-center">
-                <table>
-                  <tr class="leading-3">
-                    <td class="font-bold">&nbsp;</td>
-                    <td class="font-bold">0</td>
-                    <td class="font-bold">1</td>
-                  </tr>
-                  <tr class="leading-4">
-                    <td class="font-bold">0&nbsp;</td>
-                    <td id="r0">0</td>
-                    <td id="r1">0</td>
-                  </tr>
-                  <tr class="leading-4">
-                    <td class="font-bold">1&nbsp;</td>
-                    <td id="r2">0</td>
-                    <td id="r3">0</td>
-                  </tr>
-                  <tr class="leading-4">
-                    <td class="font-bold">2&nbsp;</td>
-                    <td id="r4">0</td>
-                    <td id="r5">0</td>
-                  </tr> 
-                  <tr class="leading-4">
-                    <td class="font-bold">3&nbsp;</td>
-                    <td id="r6">0</td>
-                    <td id="r7">0</td>
-                  </tr>
-                </table>
-                <table>
-                  <tr class="leading-3">
-                    <td class="font-bold">&nbsp;</td>
-                    <td class="font-bold">0</td>
-                    <td class="font-bold">1</td>
-                  </tr>
-                  <tr class="leading-4">
-                    <td>&nbsp;</td>
-                    <td id="r8">0</td>
-                    <td id="r9">0</td>
-                    <td class="font-bold">&nbsp;4</td>
-                  </tr>
-                  <tr class="leading-4">
-                    <td>&nbsp;</td>
-                    <td id="r10">0</td>
-                    <td id="r11">0</td>
-                    <td class="font-bold">&nbsp;5</td>
-                  </tr>
-                  <tr class="leading-4">
-                    <td>&nbsp;</td>
-                    <td id="r12">0</td>
-                    <td id="r13">0</td>
-                    <td class="font-bold">&nbsp;6</td>
-                  </tr> 
-                  <tr class="leading-4">
-                    <td>&nbsp;</td>
-                    <td id="r14">0</td>
-                    <td id="r15">0</td>
-                    <td class="font-bold">&nbsp;7</td>
-                  </tr>
-                </table>
-              </div>
+              <div id="reg_pair_view" class="flex justify-center"></div>
             </div>
           </div>
-          <div id="col"></div>
         </div>
         <b class="text-xl p-2">CPU Excecution:</b>
         <div class="bg-blue-500 h-100% width-100% text-lg flex border-solid border-[2.5px] rounded-lg border-black">
           <div id="col0" class="w-50%">
             <div id="row0" class="p-2">
-              <button id="step_button" onclick="stepCPU()" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Step Once</button>
-              <button id="step_button" onclick="stepCPU(10)" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Step n Times</button>
+              <button id="step_button" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Step Once</button>
+              <span>n:</span><input id="step_count" type="number" class="w-20 rounded-md text-right border-black border-2" min="1" max="99999"></input>
+              <button id="step_button_n" onclick="stepCPU()" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Step n Times</button>
+              <button id="run_button" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Run</button>
+              <button id="stop_button" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Stop</button>
             </div>
             <div id="row1" class="p-2">
               <button id="reset_button" onclick="initEmulator()" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Reset CPU</button>
@@ -152,43 +69,39 @@
           </div>
         </div>
       </div>
-
-      <div id="right_side" class="w-[650px] p-[20px] pr-5 pl-5">
+      <div id="right_side" class="w-[600px] p-[20px] pr-5 pl-5">
         <b class="text-xl p-2">CPU Program ROM:</b>
         <div class="bg-blue-500 h-100% width-100% text-lg flex border-solid border-[2.5px] rounded-lg border-black">
           <div id="memory_view_wrapper" class="p-[20px]">
             <table id="rom_view" class="bg-blue-800 border-solid border-black border-2 rounded-lg grid"></table>
           </div>
-          <div id="memory_options">
-            <select id="rom_page_select">
-              <option value="0" selected="select">Page 0</option>
-              <option value="1">Page 1</option>
-              <option value="2">Page 2</option>
-              <option value="3">Page 3</option>
-              <option value="4">Page 4</option>
-              <option value="5">Page 5</option>
-              <option value="6">Page 6</option>
-              <option value="7">Page 7</option>
-              <option value="8">Page 8</option>
-              <option value="9">Page 9</option>
-              <option value="10">Page 10</option>
-              <option value="11">Page 11</option>
-              <option value="12">Page 12</option>
-              <option value="13">Page 13</option>
-              <option value="14">Page 14</option>
-              <option value="15">Page 15</option>
-            </select>
+          <div id="memory_options" class="p-[20px]">
+            <select id="rom_page_select" class="rounded-md text-center border-black border-2"></select>
           </div>
         </div>
         <b class="text-xl p-2">CPU Data RAM:</b>
-        <div class="bg-blue-500 h-100% width-100% text-lg flex border-solid border-[2.5px] rounded-lg border-black">
-          <div id="ram_view_wrapper" class="p-[20px]">
-            <table id="ram_view" class="bg-blue-800 border-solid border-black border-2 rounded-lg grid"></table>
+        <div class="bg-blue-500 h-100% width-100% text-lg border-solid border-[2.5px] rounded-lg border-black">
+          <div id="row0" class="p-[20px] pt-1 pb-1 flex text-center">
+            <div>
+              <b class="pb-2">Main Memory</b>
+              <table id="ram_view" class="bg-blue-800 border-solid border-black border-2 rounded-lg grid"></table>
+            </div>
+            <div class="p-[20px] pt-9">  
+              <select id="ram_bank_select" class="rounded-md text-center border-black border-2 m-2"></select>
+              <select id="ram_chip_select" class="rounded-md text-center border-black border-2"></select>
+            </div>
           </div>
-            
+          <div id="row1" class="p-[20px] pt-0 flex text-center">
+            <div>
+              <b class="pb-2">Status</b>
+              <table id="status_view" class="bg-blue-800 border-solid border-black border-2 rounded-lg grid"></table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+    
+    <script type="module" src="main.js" defer> </script>
   </body>
 
 </html> 

@@ -236,18 +236,31 @@ def conv_int(num: str or int, size_limit: int = 0xFF) -> int:
 
 
 def conv_r(r: str) -> int or str:
-    if len(r) == 2 and r[0] == "R" and 0 <= (reg := int(r[1])) < 16:
+    if len(r) == 2 and r[0] == "R" and 0 <= (reg := int(r[1])) <= 9:
         return reg
+    elif len(r) == 3 and r[0] == "R" and r[1] == "1" and 0 <= (reg := int(r[2])) <= 5:
+        return reg + 10
+        
     else:
         return r
 
 
 def conv_p(p: str) -> int or str:
-    if (len(p) == 4 and p[0] == "R" and p[2] == "R" and int(p[1]) % 2 == 0
-            and int(p[1]) <= 14 and int(p[3]) == (int(p[1]) + 1)):
-        return int(p[1]) // 2
-    elif len(p) == 2 and p[0] == "P" and 0 <= (pair := int(p[1])) < 8:
-        return pair
+    # if (len(p) == 4 and p[0] == "R" and p[2] == "R" and int(p[1]) % 2 == 0
+    #         and int(p[1]) <= 9 and int(p[3]) == (int(p[1]) + 1)):
+    #     return int(p[1]) // 2
+    # elif len(p) == 2 and p[0] == "P" and 0 <= (pair := int(p[1])) < 8:
+    #     return pair
+    # else:
+    #     return p
+    if p[0] == "P":
+        p = p.split("P")
+        if 0 <= int(p[1]) < 8:
+            return p[1]
+    elif p[0] == "R" and p[2] == "R" or p[3] == "R":
+        p: list[int] = list(map(int, p.split("R")[1:3]))
+        if p[0] % 2 == 0 and p[0] <= 14 and p[1] == p[0] + 1:
+            return p[0] // 2
     else:
         return p
 
@@ -263,7 +276,7 @@ def trim(tokens: list[str]) -> list[str]:
 
 
 def main():
-    with open("fib_nums.txt", "r") as f:
+    with open("resources/multiplication.txt", "r") as f:
         lines = f.readlines()
     for line in lines:
         if not add_label(line):
@@ -274,7 +287,7 @@ def main():
             print("Error: Invalid line")
             break
     print(data)
-    with open("fib_nums.bin", "wb") as f:
+    with open("resources/multiplication.bin", "wb") as f:
         f.write(bytearray(data))
 
 
