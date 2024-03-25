@@ -27,7 +27,7 @@ function adjustNInput() {
     let step_count = document.getElementById("step_count");
     let steps = parseInt(step_count.value);
     if (steps < step_count.min) step_count.value = 1;
-    else if (steps > step_count.max) step_count.value = 100;
+    else if (steps > step_count.max) step_count.value = step_count.max;
     else if (isNaN(steps)) step_count.value = 1;
 }
 
@@ -110,10 +110,12 @@ function initEmulator() {
         cpu.stepCPU(1);
     }
     document.getElementById("step_button_n").onclick = function() {
+        adjustNInput();
         cpu.stepCPU(document.getElementById("step_count").value);
     }
     document.getElementById("run_button").onclick = function() {
         run = true;
+        adjustNInput();
         runCPU(cpu, document.getElementById("step_count").value);
     }
     document.getElementById("stop_button").onclick = function() {
@@ -256,13 +258,13 @@ topRow.className = "leading-4";
 
 var topCell = document.createElement("td");
 topCell.className = "address";
-topCell.innerHTML = "&nbsp;&nbsp;";
+topCell.innerHTML = "&nbsp;";
 topRow.appendChild(topCell);
 
 for (var i = 0; i < 16; i++) {
     var cell = document.createElement("td");
     cell.className = "address";
-    cell.innerHTML = "0" + hex[i];
+    cell.innerHTML = hex[i];
     topRow.appendChild(cell);
 }
 ram_table.appendChild(topRow);
@@ -273,7 +275,7 @@ for (var i = 0; i < 4; i++) {
 
     var cell = document.createElement("td");
     cell.className = "address";
-    cell.innerHTML = hex[i] + "0";
+    cell.innerHTML = hex[i];
     row.appendChild(cell);
     for (var j = 0; j < 16; j++) {
         var cell = document.createElement("td");
@@ -331,7 +333,7 @@ for (let i = 0; i < 8; i++) {
 }
 
 let ram_chip_select = document.getElementById("ram_chip_select");
-for (let i = 0; i < 2; i++) {
+for (let i = 0; i < 4; i++) {
     let option = document.createElement("option");
     if (i == 0) option.selected = true;
     option.value = i;

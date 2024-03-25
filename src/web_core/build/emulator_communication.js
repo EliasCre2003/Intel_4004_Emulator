@@ -142,9 +142,15 @@ function updateRamView(cpu) {
     let bank = document.getElementById("ram_bank_select").selectedIndex;
     let ramData = cpu.ramBanks[bank].memory;
     for (var i = 0; i < 4; i++) {
-        for (var j = 0; j < 16; j++) {
-            var cell = document.getElementById("ram" + hex[i] + hex[j]);
-            var byteText = ramData[(i + 4 * chip) * 16 + j].toString(16).toUpperCase().padStart(2, "0");
+        for (var j = 0; j < 8; j++) {
+            var byte = ramData[(i + 4 * chip) * 8 + j]
+
+            var cell = document.getElementById("ram" + hex[i] + hex[2*j]);
+            var byteText = (byte >> 4).toString(16).toUpperCase();
+            cell.innerHTML = byteText;
+
+            cell = document.getElementById("ram" + hex[i] + hex[2*j+1]);
+            byteText = (byte & 0xF).toString(16).toUpperCase();
             cell.innerHTML = byteText;
         }
     }
