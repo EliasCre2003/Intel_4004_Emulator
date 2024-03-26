@@ -11,7 +11,8 @@ class CPU {
         for (var i = 0; i < 8; i++) {
             this.ramBanks.push(new RAM(toPtr(bytes, 24 + 4*i), this.buffer));
         }
-        this.update(bytes);   
+        this.update(bytes);
+        this.rest = 0;
     }
 
     update(bytes=NaN) {
@@ -33,6 +34,9 @@ class CPU {
         this.lastData = bytes[57];
     }
     stepCPU(steps=1) {
+        steps += this.rest;
+        this.rest = steps - Math.floor(steps);
+        steps = Math.floor(steps);
         this.exports.stepCPU(steps);
         this.update();
         updateGUI(this);
