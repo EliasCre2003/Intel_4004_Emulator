@@ -276,7 +276,7 @@ def trim(tokens: list[str]) -> list[str]:
 
 
 def main():
-    with open("resources/multiplication.txt", "r") as f:
+    with open("resources/comp_test.txt", "r") as f:
         lines = f.readlines()
     for line in lines:
         if not add_label(line):
@@ -287,7 +287,7 @@ def main():
             print("Error: Invalid line")
             break
     print(data)
-    with open("resources/multiplication.bin", "wb") as f:
+    with open("resources/comp_test.bin", "wb") as f:
         f.write(bytearray(data))
 
 

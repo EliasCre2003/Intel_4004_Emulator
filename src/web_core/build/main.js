@@ -69,7 +69,8 @@ function initROM() {
     //     0x5d, 0x87, 0x12, 0x5d, 0xb0, 0xd1, 0x50, 0x06, 0xc0, 0x20, 0x00, 0x22, 0x00, 0x24, 0x01, 0x26,
     //     0x00, 0x50, 0x16, 0x20, 0x01, 0x50, 0x16, 0x50, 0x21, 0x50, 0x16, 0x40, 0x57, 0x40, 0x5d       ];
 
-    let arr = [64, 55, 117, 17, 100, 164, 248, 159, 18, 17, 105, 169, 152, 26, 71, 169, 253, 192, 162, 37, 224, 80, 2, 163, 37, 224, 80, 2, 192, 113, 32, 96, 192, 240, 179, 128, 26, 39, 98, 179, 192, 34, 0, 38, 0, 161, 151, 20, 54, 80, 33, 103, 64, 45, 192, 32, 0, 36, 0, 40, 32, 46, 15, 80, 41, 80, 29, 80, 18, 20, 63, 64, 71]
+    // let arr = [64, 55, 117, 17, 100, 164, 248, 159, 18, 17, 105, 169, 152, 26, 71, 169, 253, 192, 162, 37, 224, 80, 2, 163, 37, 224, 80, 2, 192, 113, 32, 96, 192, 240, 179, 128, 26, 39, 98, 179, 192, 34, 0, 38, 0, 161, 151, 20, 54, 80, 33, 103, 64, 45, 192, 32, 0, 36, 0, 40, 32, 46, 15, 80, 41, 80, 29, 80, 18, 20, 63, 64, 71]
+    let arr = [32, 5, 161, 46, 0, 47, 224, 32, 3, 161, 46, 1, 47, 224, 46, 0, 47, 233, 176, 46, 1, 47, 233, 177, 176, 129, 176, 160, 46, 2, 47, 224, 64, 32];
     let ptr = encodeArray(arr, arr.length, 1);
     exports.initROM(ptr, arr.length);
     exports.wasmFree(ptr);
@@ -111,7 +112,7 @@ function initEmulator() {
     }
     document.getElementById("step_button_n").onclick = function() {
         adjustNInput();
-        cpu.stepCPU(document.getElementById("step_count").value);
+        cpu.stepCPU(parseInt(document.getElementById("step_count").value));
     }
     document.getElementById("run_button").onclick = function() {
         run = true;
