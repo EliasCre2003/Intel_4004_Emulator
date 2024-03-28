@@ -15,10 +15,10 @@
   <body class="font-mono bg-blue-800">
     <b class="text-3xl flex justify-center">Intel 4004 Emulator (WIP)</b>
     <div class="flex justify-center">
-      <div class="w-[750px] p-[20px] pl-5 pr-0">
+      <div class="w-[650px] p-[20px] pl-5 pr-0">
         <b class="text-xl p-2">CPU Status:</b>
         <div class="bg-blue-500 h-100% width-100% text-lg flex border-solid border-[2.5px] rounded-lg border-black">
-          <div id="col0" class="w-[46%] pt-1 pl-2 pr-0">
+          <div id="col0" class="w-[60%] pt-1 pl-2 pr-0">
             <div id="row0" class="pb-2">
               <b>Instruction: </b>
               <span id="opcode"></span>
@@ -31,8 +31,12 @@
               <b>PC: </b>
               <span id="pc"></span>
             </div>
+            <div id="row3">
+              <b>Register Pairs</b>
+              <div id="reg_pair_view" class="flex justify-left pt-1 pb-3"></div>
+            </div>
           </div>
-          <div id="col1" class="w-[30%] text-left pl-0 pt-1">
+          <div id="col1" class="w-[40%] text-left pl-0 pt-1">
             <div id="row0" class="pb-2">
               <b>Test-Flag: </b>
               <span id="tflag"></span>
@@ -46,12 +50,12 @@
               <span id="CM"></span>
             </div>
           </div>
-          <div id="col2" class="pt-1">
+          <!-- <div id="col2" class="pt-1">
             <div>
               <b>Register Pairs</b>
               <div id="reg_pair_view" class="flex justify-center"></div>
             </div>
-          </div>
+          </div> -->
         </div>
         <b class="text-xl p-2">CPU Excecution:</b>
         <div class="bg-blue-500 h-100% width-100% text-lg flex border-solid border-[2.5px] rounded-lg border-black">
