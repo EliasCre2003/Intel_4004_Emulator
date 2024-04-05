@@ -23,7 +23,6 @@ void NOP(CPU *cpu)
 
 void JCN(CPU *cpu)
 {
-    // printf("[JUMP %d %d %d] ", cpu->ACC, cpu->C, cpu->TEST);
     bool jump = ((cpu->OPA & 0b0100) == 0b0100 && cpu->ACC == 0) ||
                 ((cpu->OPA & 0b0010) == 0b0010 && cpu->C == 1) ||
                 ((cpu->OPA & 0b0001) == 0b0001 && cpu->TEST == 0);
@@ -31,7 +30,7 @@ void JCN(CPU *cpu)
         jump = !jump;
     if (jump)
     {
-        cpu->PC = read(cpu->programRom, ++cpu->PC);
+        cpu->PC = cpu->PC & 0xF00 | read(cpu->programRom, ++cpu->PC);
     }
     else
         cpu->PC += 2;
@@ -110,7 +109,7 @@ void ISZ(CPU *cpu)
     if (cpu->reg == 0)
         cpu->PC += 2;
     else
-        cpu->PC = read(cpu->programRom, cpu->PC + 1);
+        cpu->PC = (cpu->PC & 0xF00) | read(cpu->programRom, cpu->PC + 1);
     if (cpu->OPA % 2 == 0)
     {
         cpu->registerPairs[cpu->regPair] &= 0x0F;

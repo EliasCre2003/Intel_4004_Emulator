@@ -1,7 +1,7 @@
 @echo off
 SETLOCAL ENABLEDELAYEDEXPANSION
 
-set "file_name=main"
+set "file_name=emulator"
 if not %1.==. (
     set file_name=%1
 )
