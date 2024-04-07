@@ -120,7 +120,7 @@ function toPtr(array, startIndex) {
 
 function updateRomView(cpu) {
     let romData = cpu.programRom.memory;
-    const offset = document.getElementById("rom_page_select").selectedIndex * 0xFF;
+    const offset = document.getElementById("rom_page_select").selectedIndex * 0x100;
     let colorNext = false;
     for (let i = 0; i < 16; i++) {
         for (let j = 0; j < 16; j++) {
@@ -154,6 +154,20 @@ function updateRamView(cpu) {
             cell.innerHTML = byteText;
 
             cell = document.getElementById("ram" + hex[i] + hex[2*j+1]);
+            byteText = (byte & 0xF).toString(16).toUpperCase();
+            cell.innerHTML = byteText;
+        }
+    }
+    ramData = cpu.ramBanks[bank].status;
+    for (var i = 0; i < 4; i++) {
+        for (var j = 0; j < 2; j++) {
+            var byte = ramData[4 * (i + 4 * chip) + j]
+
+            var cell = document.getElementById("status" + hex[i] + hex[2*j]);
+            var byteText = (byte >> 4).toString(16).toUpperCase();
+            cell.innerHTML = byteText;
+
+            cell = document.getElementById("status" + hex[i] + hex[2*j+1]);
             byteText = (byte & 0xF).toString(16).toUpperCase();
             cell.innerHTML = byteText;
         }
