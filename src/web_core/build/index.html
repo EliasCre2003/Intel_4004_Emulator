@@ -62,7 +62,7 @@
           <div id="col0" class="w-50%">
             <div id="row0" class="p-2">
               <button id="step_button" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Step Once</button>
-              <span>n:</span><input id="step_count" type="number" class="w-20 rounded-md text-right border-black border-2" min="1" max="99999"></input>
+              <span>n:</span><input id="step_count" type="number" class="w-30 rounded-md text-right border-black border-2" min="1" max="9999999"></input>
               <button id="step_button_n" onclick="stepCPU()" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Step n Times</button>
               <button id="run_button" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Run n steps/sec</button>
               <button id="stop_button" class="bg-blue-800 border-solid border-black border-2 rounded-md px-1">Stop</button>
@@ -86,19 +86,19 @@
         <b class="text-xl p-2">CPU Data RAM:</b>
         <div class="bg-blue-500 h-100% width-100% text-lg border-solid border-[2.5px] rounded-lg border-black">
           <div id="row0" class="p-[20px] pt-1 pb-1 flex text-center">
-            <div>
+            <div class="pr-5">
               <b class="pb-2">Main Memory</b>
               <table id="ram_view" class="bg-blue-800 border-solid border-black border-2 rounded-lg grid"></table>
             </div>
-            <div class="p-[20px] pt-9">  
-              <select id="ram_bank_select" class="rounded-md text-center border-black border-2 m-2"></select>
-              <select id="ram_chip_select" class="rounded-md text-center border-black border-2"></select>
-            </div>
-          </div>
-          <div id="row1" class="p-[20px] pt-0 flex text-center">
             <div>
               <b class="pb-2">Status</b>
               <table id="status_view" class="bg-blue-800 border-solid border-black border-2 rounded-lg grid"></table>
+            </div>   
+          </div>
+          <div id="row1" class="p-[20px] pt-0 flex text-center">
+            <div class="p-[20px] pt-9">  
+              <select id="ram_bank_select" class="rounded-md text-center border-black border-2 m-2"></select>
+              <select id="ram_chip_select" class="rounded-md text-center border-black border-2"></select>
             </div>
           </div>
         </div>
