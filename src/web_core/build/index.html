@@ -12,23 +12,13 @@
       }
     </style>
 
-    <script>
-      function resizeIframe(obj) {
-        obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 'px';
-      }
-    </script>
-    <script type="module" src="main.js" defer> </script>
+    <script type="module" src="js/main.js" defer> </script>
     <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>
-    <!-- <script type="text/javascript">
-      function something() {
-        console.log("Hello World");
-      }
-    </script> -->
 
   </head>
   <body class="font-mono bg-blue-800" onload="brython()">
-    <script type="text/python" src="main.py"></script>
+    <script type="text/python" src="python/main.py"></script>
     <b class="text-3xl flex justify-center">Intel 4004 Emulator (WIP)</b>
     <div class="flex justify-center">
       <div class="w-[650px] p-[20px] pl-5 pr-0">
@@ -88,7 +78,7 @@
             </div>
           </div>
         </div>
-        <iframe src="display_code.html" style="width: 100%; white-space: pre; height: 400px"></iframe>
+        <iframe src="html/display_code.html" style="width: 100%; white-space: pre; height: 400px"></iframe>
       </div>
       <div id="right_side" class="w-[600px] p-[20px] pr-5 pl-5">
         <b class="text-xl p-2">CPU Program ROM:</b>

@@ -156,7 +156,7 @@ var memory = new WebAssembly.Memory({
     maximum: 512   // maximum size in pages
 })
 var exports;
-WebAssembly.instantiateStreaming(fetch("emulator.wasm"), {
+WebAssembly.instantiateStreaming(fetch("wasm/emulator.wasm"), {
     js : {
         mem : memory
     },
