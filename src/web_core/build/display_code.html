@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="color-scheme" content="light dark">
+        <script>
+            fetch('files/fib_nums.txt')
+                .then(response => response.text())
+                .then(data => {
+                    let content = document.getElementById('content');
+                    content.textContent = data;
+                })
+                .catch(err => console.error(err));
+        </script>
+    </head>
+    <body>
+        <pre id="content" style="white-space: pre;"></pre>
+    </body>
+</html>
