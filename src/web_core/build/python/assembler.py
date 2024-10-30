@@ -49,7 +49,7 @@ two_word_instructions: set[str] = {
     "ISZ",
 }
 
-instructions = one_word_instructions.union(two_word_instructions)
+instructions: set[str] = one_word_instructions.union(two_word_instructions)
 
 data: list[int] = []
 address_labels: dict[str, int] = {}
@@ -62,13 +62,11 @@ def handle_lines(line: str) -> bool:
         tokens = sp[-1].split(" ")
     else:
         tokens = tokens.strip().split(" ")
-    tokens = trim(tokens)
-    if len(tokens) == 0:
-        return True
-    if tokens[0] == '\n':
+    tokens = remove_empty_str(tokens)
+    if len(tokens) == 0 or tokens[0] == "\n":
         return True
     instruction = tokens[0].strip()
-    tokens = list(map(str.strip, tokens[1:]))
+    tokens = [token.strip() for token in tokens[1:]]
     if len(instruction) == 0:
         return True
 
@@ -79,17 +77,17 @@ def handle_lines(line: str) -> bool:
             data.append(0x10 + conv_int(tokens[0], 0xF))
             data.append(address_labels[tokens[1]] & 0xFF)
         case "FIM":
-            pair = conv_p(tokens[0])
+            pair = converte_pair(tokens[0])
             data.append(0x20 + (conv_int(pair, 0x8) << 1))
             data.append(conv_int(tokens[1]))
         case "SRC":
-            pair = conv_p(tokens[0])
+            pair = converte_pair(tokens[0])
             data.append(0x21 + (conv_int(pair, 0x8) << 1))
         case "FIN":
-            pair = conv_p(tokens[0])
+            pair = converte_pair(tokens[0])
             data.append(0x30 + (conv_int(pair, 0x8) << 1))
         case "JIN":
-            pair = conv_p(tokens[0])
+            pair = converte_pair(tokens[0])
             data.append(0x31 + (conv_int(pair, 0x8) << 1))
         case "JUN":
             address = address_labels[tokens[0]]
@@ -100,23 +98,23 @@ def handle_lines(line: str) -> bool:
             data.append(0x50 + (address >> 8))
             data.append(address & 0xFF)
         case "INC":
-            reg = conv_r(tokens[0])
+            reg = converte_register(tokens[0])
             data.append(0x60 + conv_int(reg, 0xF))
         case "ISZ":
-            reg = conv_r(tokens[0])
+            reg = converte_register(tokens[0])
             data.append(0x70 + conv_int(reg, 0xF))
             data.append(address_labels[tokens[1]] & 0xFF)
         case "ADD":
-            reg = conv_r(tokens[0])
+            reg = converte_register(tokens[0])
             data.append(0x80 + conv_int(reg, 0xF))
         case "SUB":
-            reg = conv_r(tokens[0])
+            reg = converte_register(tokens[0])
             data.append(0x90 + conv_int(reg, 0xF))
         case "LD" :
-            reg = conv_r(tokens[0])
+            reg = converte_register(tokens[0])
             data.append(0xA0 + conv_int(reg, 0xF))
         case "XCH":
-            reg = conv_r(tokens[0])
+            reg = converte_register(tokens[0])
             data.append(0xB0 + conv_int(reg, 0xF))
         case "BBL":
             data.append(0xC0 + conv_int(tokens[0], 0xF))
@@ -195,7 +193,7 @@ def add_label(line: str) -> bool:
     line = line.strip().split(",")
     if len(line) < 2:
         sp = line[0].split(" ")
-        sp = trim(sp)
+        sp = remove_empty_str(sp)
         if len(sp) == 0:
             label_address_counter -= 1
         elif sp[0] in two_word_instructions:
@@ -208,7 +206,7 @@ def add_label(line: str) -> bool:
     for i in range(len(line)-1):
         address_labels[line[i]] = label_address_counter - 1
     rest = line[1].split(" ")
-    rest = trim(rest)
+    rest = remove_empty_str(rest)
     if len(rest) == 0:
         label_address_counter -= 1
         return True
@@ -217,41 +215,43 @@ def add_label(line: str) -> bool:
     return True
 
 
-def conv_int(num: str | int, size_limit: int = 0xFF) -> int:
-    if type(num) is str:
-        len_num = len(num)
-        if len_num > 2 and num[:2] == "0x":
-            dat = int(num, 16)
-        elif len_num > 2 and num[:2] == "0b":
-            dat = int(num, 2)
+def conv_int(number: str | int, size_limit: int = 0xFF) -> int:
+    if type(number) is str:
+        len_num = len(number)
+        if len_num > 2 and number[:2] == "0x":
+            data = int(number, 16)
+        elif len_num > 2 and number[:2] == "0b":
+            data = int(number, 2)
         else:
-            dat = int(num, 10)
-    elif type(num) is int:
-        dat = num
+            data = int(number, 10)
+    elif type(number) is int:
+        data = number
     else:
         raise TypeError
-    if 0 <= dat <= size_limit:
-        return dat
+    if 0 <= data <= size_limit:
+        return data
     else:
-        print(f"Error: {num} is out of range")
+        print(f"Error: {number} is out of range")
         raise ValueError
 
 
-def conv_r(r: str) -> int | str:
-    if len(r) == 2 and r[0] == "R" and 0 <= (reg := int(r[1])) <= 9:
-        return reg
-    elif len(r) == 3 and r[0] == "R" and r[1] == "1" and 0 <= (reg := int(r[2])) <= 5:
-        return reg + 10
-        
+def converte_register(reg: str) -> int | str:
+    if len(reg) == 2 and reg[0] == "R" and 0 <= (reg_index := int(reg[1])) <= 9:
+        return reg_index
+    elif len(reg) == 3 and reg[0] == "R" and reg[1] == "1" and 0 <= (reg_index := int(reg[2])) <= 5:
+        return reg_index + 10
     else:
-        return r
+        return reg
 
 
-def conv_p(p: str) -> int | str:
+def converte_pair(p: str) -> int | str:
     if p[0] == "P":
         p = p.split("P")
         if 0 <= int(p[1]) < 8:
             return p[1]
+        else:
+            print(f"Error: {p[1]} is out of range")
+            raise ValueError()
     elif p[0] == "R" and p[2] == "R" or p[3] == "R":
         p: list[int] = list(map(int, p.split("R")[1:3]))
         if p[0] % 2 == 0 and p[0] <= 14 and p[1] == p[0] + 1:
@@ -260,34 +260,23 @@ def conv_p(p: str) -> int | str:
         return p
 
 
-def trim(tokens: list[str]) -> list[str]:
-    i = 0
-    while i < len(tokens):
-        if tokens[i] == "":
-            tokens.pop(i)
-        else:
-            i += 1
-    return tokens
+def remove_empty_str(tokens: list[str]) -> list[str]:
+    return [token for token in tokens if token != ""]
 
 
-def assemble_from_str(code: str, bin_path: str = None) -> list[int]:
+def assemble_from_str(code: str, binary_destination: str = None) -> list[int]:
     lines = code.split("\n")
     for line in lines:
-        print(line)
         if not add_label(line):
             print("Error: Invalid line")
             return None
-    print(address_labels)
     for line in lines:
-        print(line)
         if not handle_lines(line):
             print("Error: Invalid line")
             return None
-    
-    if bin_path is not None:
-        with open(bin_path, "wb") as f:
+    if binary_destination is not None:
+        with open(binary_destination, "wb") as f:
             f.write(bytearray(data))
-    print(data)
     return data
 
 
@@ -295,3 +284,8 @@ def assemble_from_file(source_path: str, bin_path: str = None) -> list[int]:
     with open(source_path, "r") as f:
         content = f.read()
     return assemble_from_str(content, bin_path)
+
+
+if __name__ == "__main__":
+    assemble_from_file("src/web_core/build/files/fib_nums.txt", "src/web_core/build/files/fib_nums.bin")
+    print("Done")

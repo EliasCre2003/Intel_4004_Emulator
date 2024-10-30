@@ -60,18 +60,6 @@ function decodeArray(ptr, len) {
 }
 
 function initROM(arr) {
-    console.log(arr)
-    // let arr = [
-    //     0x40, 0x49, 0x73, 0x05, 0x62, 0xC0, 0x85, 0xb5, 0x1a, 0x0b, 0x64, 0xc0, 0xb5, 0x95, 0xb5, 0x1a,
-    //     0x15, 0xd1, 0xb4, 0x94, 0xb4, 0xc0, 0xa0, 0x23, 0xe0, 0x50, 0x02, 0xa1, 0x23, 0xe0, 0x50, 0x02,
-    //     0xc0, 0x26, 0x00, 0x25, 0xe9, 0xb7, 0xd2, 0x50, 0x06, 0x25, 0xe9, 0x87, 0xb1, 0x26, 0x00, 0x1a,
-    //     0x33, 0x26, 0x01, 0xd3, 0x50, 0x0c, 0x25, 0xe9, 0xb6, 0xd2, 0x50, 0x06, 0x25, 0xe9, 0x86, 0x12,
-    //     0x5d, 0x87, 0x12, 0x5d, 0xb0, 0xd1, 0x50, 0x06, 0xc0, 0x20, 0x00, 0x22, 0x00, 0x24, 0x01, 0x26,
-    //     0x00, 0x50, 0x16, 0x20, 0x01, 0x50, 0x16, 0x50, 0x21, 0x50, 0x16, 0x40, 0x57, 0x40, 0x5d       ];
-
-    // let arr = [64, 55, 117, 17, 100, 164, 248, 159, 18, 17, 105, 169, 152, 26, 71, 169, 253, 192, 162, 37, 224, 80, 2, 163, 37, 224, 80, 2, 192, 113, 32, 96, 192, 240, 179, 128, 26, 39, 98, 179, 192, 34, 0, 38, 0, 161, 151, 20, 54, 80, 33, 103, 64, 45, 192, 32, 0, 36, 0, 40, 32, 46, 15, 80, 41, 80, 29, 80, 18, 20, 63, 64, 71]
-    // var binFile = readFile( "program.bin", "b" );
-    // console.log( "The value of binFile is: " + binFile );
     let ptr = encodeArray(arr, arr.length, 1);
     exports.initROM(ptr, arr.length);
     exports.wasmFree(ptr);
@@ -88,30 +76,14 @@ var run = false;
 function runCPU(cpu, steps) {
     if (((cpu.programRom.memory[cpu.PC] << 8) | cpu.programRom.memory[cpu.PC+1]) == (0x4000 | cpu.PC)) run = false;
     if (!run) return;
-    console.log(cpu.pc)
-    if (steps > 40) {
-        cpu.stepCPU(steps / 40);
-        sleep(25).then(() => {
-            runCPU(cpu, steps);
-        });
-    } else {
-        cpu.stepCPU(1);
-        sleep(1000 / steps).then(() => {
-            runCPU(cpu, steps);
-        });
-    }
+    cpu.stepCPU(steps > 40 ? steps / 40 : 1);
+    sleep(steps > 40 ? 25 : 1000 / steps).then(() => {
+        runCPU(cpu, steps);
+    });
 }
 
 
-export function initEmulator(arr = [
-    0x20, 0x7, 0x50, 0x6a, 0x20, 0x0, 0x50, 0x6d, 0x22, 0x0, 0x22, 0x2, 0xa0, 0x92, 0x1c, 0x1e, 
-0xa1, 0x93, 0x1c, 0x1e, 0x20, 0x3, 0x2e, 0x1, 0x50, 0x70, 0x50, 0x6a, 0x40, 0x68, 0x20, 0x0,
-0x2c, 0x0, 0x2e, 0x0, 0x50, 0x70, 0x50, 0x6d, 0x22, 0x0, 0x22, 0x3, 0xa0, 0x92, 0x1c, 0x3e,
-0xa1, 0x93, 0x1c, 0x3e, 0x20, 0x4, 0x2e, 0x1, 0x50, 0x70, 0x50, 0x6a, 0x40, 0x68, 0x20, 0x0,
-0x2c, 0x0, 0x2e, 0x0, 0x50, 0x70, 0x50, 0x6d, 0x22, 0x0, 0x22, 0x4, 0xa0, 0x92, 0x1c, 0x5e,
-0xa1, 0x93, 0x1c, 0x5e, 0x20, 0x5, 0x2e, 0x1, 0x50, 0x70, 0x50, 0x6a, 0x40, 0x68, 0x20, 0x6,
-0x2c, 0x0, 0x2e, 0x1, 0x50, 0x70, 0x50, 0x6a, 0x40, 0x68, 0xa1, 0xe0, 0xc0, 0xe9, 0xb1, 0xc0,
-0xad, 0xfd, 0x2f, 0xc0]) {
+export function initEmulator(arr = []) {
     initROM(arr);
     run = false;
     let pCPU = exports.resetCPU();
@@ -149,31 +121,33 @@ export function initEmulator(arr = [
 
 window.initEmulator = initEmulator;
 
-
-
-var memory = new WebAssembly.Memory({
-    initial: 64,  // initial size in pages, (1 page = 64 KiB)
-    maximum: 512   // maximum size in pages
-})
+var memory;
 var exports;
-WebAssembly.instantiateStreaming(fetch("wasm/emulator.wasm"), {
-    js : {
-        mem : memory
-    },
-    env : {
-        emscripten_resize_heap : function (delta) {
-                memory.grow(delta);
-            }
-    }
-}).then(results => {
-    exports = results.instance.exports;
-    memory = results.instance.exports.memory;
-});
+
+function initWebAssembly() {
+    memory = new WebAssembly.Memory({
+        initial: 64,  // initial size in pages, (1 page = 64 KiB)
+        maximum: 512   // maximum size in pages
+    })
+    return WebAssembly.instantiateStreaming(fetch("wasm/emulator.wasm"), {
+        js : {
+            mem : memory
+        },
+        env : {
+            emscripten_resize_heap : function (delta) {
+                    memory.grow(delta);
+                }
+        }
+    }).then(results => {
+        exports = results.instance.exports;
+        memory = results.instance.exports.memory;
+    });
+}
+
+initWebAssembly().then(() => initEmulator());
 
 
-
-var reg_pairs = document.getElementById("reg_pair_view");
-
+let reg_pairs = document.getElementById("reg_pair_view");
 let table = document.createElement("table");
 // table.appendChild(topRowRegPairs());
 for (let i = 0; i < 4; i++) {
@@ -220,7 +194,7 @@ reg_pairs.appendChild(table);
 
 adjustNInput();
 
-var rom_table = document.getElementById("rom_view");
+let rom_table = document.getElementById("rom_view");
 
 var topRow = document.createElement("tr");
 topRow.className = "leading-4";
@@ -355,6 +329,6 @@ for (let i = 0; i < 4; i++) {
     ram_chip_select.appendChild(option);
 }
 
-sleep(500).then(() => {
-    initEmulator();
-});
+// sleep(500).then(() => {
+//     initEmulator();
+// });
